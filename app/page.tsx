@@ -24,21 +24,20 @@ export default function Home() {
         </ol>
 
         <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <Link href="/login"> 
-          <a
+          <Link
+            href="/login"
             className="rounded-full border border-transparent transition-all duration-300 flex items-center justify-center bg-foreground text-background gap-2 hover:bg-opacity-90 hover:brightness-110 hover:scale-105 shadow-md text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
             target="_blank"
-            rel="noopener noreferrer"
-          >
+            rel="noopener noreferrer">
+
             <Image
               className="light:invert"
               src="/triangle.png"
               alt="Vercel logo mark"
               width={20}
               height={20}
-            />
-            Login
-          </a>
+            />Login
+                      
           </Link>
           <a
             className="rounded-full border border-solid border-black/[.08] dark:border-black/[1] transition-all duration-300 flex items-center justify-center hover:bg-opacity-90 hover:brightness-110 hover:scale-105 shadow-md text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
