@@ -37,11 +37,11 @@ export default function Home() {
               width={20}
               height={20}
             />Login
-                      
+
           </Link>
           <a
             className="rounded-full border border-solid border-black/[.08] dark:border-black/[1] transition-all duration-300 flex items-center justify-center hover:bg-opacity-90 hover:brightness-110 hover:scale-105 shadow-md text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+            href="/signup"
             target="_blank"
             rel="noopener noreferrer"
           >
