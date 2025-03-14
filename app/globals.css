@@ -1,6 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@tailwind screens;
+
 
 :root {
   --background: #ffffff;
@@ -8,6 +10,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
+
   :root {
     --background: #eae8e8;
     --foreground: #010101;
