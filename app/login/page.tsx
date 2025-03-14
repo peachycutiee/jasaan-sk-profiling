@@ -1,12 +1,13 @@
 import React from 'react';
-import Link from "next/link";
+import Link from 'next/link';
+import Image from 'next/image';
 
 const LoginPage = () => {
   return (
     <div className="flex h-screen items-center justify-center">
       {/* Left Side - Logo */}
       <div className="w-1/2 flex justify-center items-center">
-        <img src="/jasaan-logo.png" alt="Municipality of Jasaan" className="w-64" />
+        <Image src="/jasaan-logo.png" width={1000} height={1000} alt="Municipality of Jasaan" className="w-64" />
       </div>
 
       {/* Vertical Divider */}
@@ -32,9 +33,12 @@ const LoginPage = () => {
             Forgot Password?
           </p>
 
-          <button className="w-full bg-red-600 text-white py-3 rounded-full mt-4 text-lg font-bold">
+          <Link href="/dashboard">
+            <button className="w-full bg-red-600 text-white py-3 rounded-full mt-4 text-lg font-bold">
             Login
-          </button>
+            </button>
+          </Link>
+
 
           <div className="mt-4 flex justify-center w-full">
             <Link href="/signup">

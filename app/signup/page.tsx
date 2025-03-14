@@ -1,25 +1,26 @@
-"use client";
-import { useState } from "react";
-import Link from "next/link";
+'use client';
+import { useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Signup() {
   const [form, setForm] = useState({ fullName: "", email: "", password: "" });
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  function handleSubmit(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
     console.log("User Data:", form);
     // Add authentication logic here
-  };
+  }
 
   return (
-    <div className="flex h-screen items-center justify-center">
+      <div className="flex h-screen items-center justify-center">
       {/* Left Side - Logo */}
       <div className="w-1/2 flex justify-center items-center">
-        <img src="/jasaan-logo.png" alt="Municipality of Jasaan" className="w-64" />
+        <Image src="/jasaan-logo.png" width={1000} height={1000} alt="Municipality of Jasaan" className="w-64" />
       </div>
 
       {/* Vertical Divider */}
