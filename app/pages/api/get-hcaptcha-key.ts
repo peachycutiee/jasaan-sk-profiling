@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  res.status(200).json({ siteKey: process.env.HCAPTCHA_SITE_KEY });
+  res.status(200).json({ siteKey: process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY });
 }
