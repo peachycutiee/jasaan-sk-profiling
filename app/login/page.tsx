@@ -1,25 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "@/app/auth/auth";
+import { signIn } from "@/app/auth/auth"; // Updated signIn function
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import HCaptcha from "@hcaptcha/react-hcaptcha";
+import HCaptcha from "@hcaptcha/react-hcaptcha"; // Import hCaptcha React component
 
-const siteKey = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || "";
+const siteKey = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || ""; // Load from env
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaToken, setCaptchaToken] = useState(""); // Store hCaptcha token
   const [error, setError] = useState("");
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    console.log("Captcha Token:", captchaToken);
 
     if (!captchaToken) {
       setError("Please complete the hCaptcha verification.");
@@ -27,11 +25,9 @@ const LoginPage = () => {
     }
 
     try {
-      const result = await signIn(email, password, captchaToken);
-      console.log("Login result:", result);
-      router.push("/dashboard");
+      await signIn(email, password, captchaToken); // Pass hCaptcha token
+      router.push("/dashboard"); // Redirect on success
     } catch (err: unknown) {
-      console.error("Login error:", err);
       setError(err instanceof Error ? err.message : "An unknown error occurred.");
     }
   };

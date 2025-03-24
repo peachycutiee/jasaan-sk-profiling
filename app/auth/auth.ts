@@ -1,6 +1,11 @@
-import supabase from "@/app/lib/supabaseClient";
+import { createClient } from "@supabase/supabase-js";
 
-// Function to sign in with email/password
+export const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+// Function to sign in with email/password + hCaptcha
 export const signIn = async (email: string, password: string, captchaToken: string) => {
   const res = await fetch("/api/auth/login", {
     method: "POST",
@@ -8,16 +13,9 @@ export const signIn = async (email: string, password: string, captchaToken: stri
     body: JSON.stringify({ email, password, captchaToken }),
   });
 
-  if (!res.ok) {
-    const errorText = await res.text(); // Read response as text
-    throw new Error(errorText || "An unknown error occurred");
-  }
-
-  try {
-    return await res.json();
-  } catch {
-    throw new Error("Invalid JSON response from server");
-  }
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error);
+  return data;
 };
 
 // Function to sign out
