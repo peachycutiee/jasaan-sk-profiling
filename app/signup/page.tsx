@@ -1,23 +1,48 @@
-'use client';
-import { useState } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import HCaptcha from "@hcaptcha/react-hcaptcha"; // Import hCaptcha
 
 export default function Signup() {
+  const supabase = createClientComponentClient();
+  const router = useRouter();
   const [form, setForm] = useState({ fullName: "", email: "", password: "" });
+  const [captchaToken, setCaptchaToken] = useState(""); // Store hCaptcha token
+  const [error, setError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  function handleSubmit(e: React.MouseEvent<HTMLButtonElement>) {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    console.log("User Data:", form);
-    // Add authentication logic here
-  }
+    setError("");
+
+    if (!captchaToken) {
+      setError("Please complete the hCaptcha verification.");
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email: form.email,
+      password: form.password,
+    });
+    
+    if (error) {
+      setError(error.message); // Display error to the user
+    } else {
+      console.log("User signed up:", data.user);
+      router.push("/dashboard"); // Redirect after successful signup
+    }    
+
+    router.push("/dashboard");
+  };
 
   return (
-      <div className="flex h-screen items-center justify-center">
+    <div className="flex h-screen items-center justify-center">
       {/* Left Side - Logo */}
       <div className="w-1/2 flex justify-center items-center">
         <Image src="/jasaan-logo.png" width={1000} height={1000} alt="Municipality of Jasaan" className="w-64" />
@@ -60,6 +85,17 @@ export default function Signup() {
             required
           />
 
+          {/* hCaptcha Widget */}
+          <div className="mb-4 flex justify-center">
+            <HCaptcha
+              sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY as string}
+              onVerify={setCaptchaToken} // Save hCaptcha token
+            />
+          </div>
+
+          {/* Display Error Message */}
+          {error && <p className="text-red-500 text-center">{error}</p>}
+
           <button
             type="submit"
             onClick={handleSubmit}
@@ -70,10 +106,10 @@ export default function Signup() {
 
           <div className="mt-4 flex justify-center w-full">
             <Link href="/login">
-                <span className="text-black">
+              <span className="text-black">
                 Already have an account?{" "}
                 <span className="text-red-600 font-bold cursor-pointer">Login</span>
-                </span>
+              </span>
             </Link>
           </div>
         </div>

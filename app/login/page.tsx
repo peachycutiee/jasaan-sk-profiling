@@ -8,13 +8,14 @@ import Image from "next/image";
 import Script from "next/script"; // Import Script for hCaptcha
 import HCaptcha from "@hcaptcha/react-hcaptcha"; // Import hCaptcha React component
 
+const siteKey = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || ""; // Load site key from environment variables
+
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [captchaToken, setCaptchaToken] = useState(""); // Store hCaptcha token
   const [error, setError] = useState("");
   const router = useRouter();
-  const siteKey = "bf886fc0-5aee-4f3c-889e-3ca8a09000a2"; // hCaptcha site key
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,13 +28,13 @@ const LoginPage = () => {
     try {
       await signIn(email, password);
       router.push("/dashboard"); // Redirect to dashboard on success
-    } catch (err: unknown) {  
+    } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
         setError("An unknown error occurred.");
       }
-    }    
+    }
   };
 
   return (
