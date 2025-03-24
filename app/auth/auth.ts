@@ -6,9 +6,15 @@ export const supabase = createClient(
 );
 
 // Function to sign in with email/password
-export const signIn = async (email: string, password: string) => {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw new Error(error.message);
+export const signIn = async (email: string, password: string, captchaToken: string) => {
+  const res = await fetch("/api/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password, captchaToken }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error);
   return data;
 };
 
@@ -22,3 +28,6 @@ export const getUser = async () => {
   const { data } = await supabase.auth.getUser();
   return data.user;
 };
+
+
+

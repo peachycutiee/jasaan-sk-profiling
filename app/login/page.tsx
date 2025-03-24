@@ -1,14 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "@/app/auth/auth"; // Import authentication function
+import { signIn } from "@/app/auth/auth"; // Updated signIn function
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import Script from "next/script"; // Import Script for hCaptcha
 import HCaptcha from "@hcaptcha/react-hcaptcha"; // Import hCaptcha React component
 
-const siteKey = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || ""; // Load site key from environment variables
+const siteKey = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || ""; // Load from env
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -26,31 +25,18 @@ const LoginPage = () => {
     }
 
     try {
-      await signIn(email, password);
-      router.push("/dashboard"); // Redirect to dashboard on success
+      await signIn(email, password, captchaToken); // Pass hCaptcha token
+      router.push("/dashboard"); // Redirect on success
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("An unknown error occurred.");
-      }
+      setError(err instanceof Error ? err.message : "An unknown error occurred.");
     }
   };
 
   return (
     <div className="flex h-screen items-center justify-center">
-      {/* Load hCaptcha script */}
-      <Script src="https://js.hcaptcha.com/1/api.js" async defer />
-
       {/* Left Side - Logo */}
       <div className="w-1/2 flex justify-center items-center">
-        <Image
-          src="/jasaan-logo.png"
-          width={1000}
-          height={1000}
-          alt="Municipality of Jasaan"
-          className="w-64"
-        />
+        <Image src="/jasaan-logo.png" width={1000} height={1000} alt="Municipality of Jasaan" className="w-64" />
       </div>
 
       {/* Vertical Divider */}
@@ -62,41 +48,19 @@ const LoginPage = () => {
         <p className="text-gray-700">Monitor Jasaan Population</p>
 
         <form onSubmit={handleLogin} className="mt-6 w-full max-w-md">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full p-3 border rounded-full mb-4"
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="w-full p-3 border rounded-full mb-2"
-          />
+          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-3 border rounded-full mb-4" />
+          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full p-3 border rounded-full mb-2" />
 
           {/* hCaptcha Widget */}
           <div className="mb-4 flex justify-center">
-            <HCaptcha
-              sitekey={siteKey}
-              onVerify={setCaptchaToken} // Save hCaptcha token when verified
-            />
+            <HCaptcha sitekey={siteKey} onVerify={setCaptchaToken} />
           </div>
 
           {/* Forgot Password Link */}
-          <p className="text-right text-sm text-red-500 cursor-pointer">
-            Forgot Password?
-          </p>
+          <p className="text-right text-sm text-red-500 cursor-pointer">Forgot Password?</p>
 
           {/* Login Button */}
-          <button
-            type="submit"
-            className="w-full bg-red-600 text-white py-3 rounded-full mt-4 text-lg font-bold"
-          >
+          <button type="submit" className="w-full bg-red-600 text-white py-3 rounded-full mt-4 text-lg font-bold">
             Login
           </button>
 
@@ -106,12 +70,7 @@ const LoginPage = () => {
           {/* Sign Up Link */}
           <div className="mt-4 flex justify-center w-full">
             <Link href="/signup">
-              <span className="text-black">
-                Don’t have an account?{" "}
-                <span className="text-red-600 font-bold cursor-pointer">
-                  Sign Up
-                </span>
-              </span>
+              <span className="text-black">Don’t have an account? <span className="text-red-600 font-bold cursor-pointer">Sign Up</span></span>
             </Link>
           </div>
         </form>
