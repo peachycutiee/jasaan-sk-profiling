@@ -1,40 +1,27 @@
+import { NextApiRequest, NextApiResponse } from "next";
 import supabase from "@/app/lib/supabaseClient";
-import { NextResponse } from "next/server";
 
-export async function POST(req: Request) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "POST") return res.status(405).json({ error: "Method Not Allowed" });
+
   try {
-    const { email, password, captchaToken } = await req.json();
+    const { email, password, captchaToken } = req.body;
+
+    console.log("Received Login Request:", req.body);
 
     if (!email || !password || !captchaToken) {
-      return NextResponse.json({ error: "All fields are required." }, { status: 400 });
+      return res.status(400).json({ error: "Missing credentials" });
     }
 
-    // 🔹 Verify hCaptcha Token with hCaptcha API
-    const hcaptchaResponse = await fetch("https://api.hcaptcha.com/siteverify", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        secret: process.env.HCAPTCHA_SECRET_KEY!, // Server-side secret key
-        response: captchaToken, // User-provided token
-      }).toString(),
-    });
-
-    const hcaptchaResult = await hcaptchaResponse.json();
-    if (!hcaptchaResult.success) {
-      return NextResponse.json({ error: "Captcha verification failed." }, { status: 400 });
-    }
-
-    // Proceed with Supabase authentication after hCaptcha validation
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (error) {
-      console.error("Supabase Auth Error:", error.message);
-      return NextResponse.json({ error: error.message }, { status: 401 });
-    }
+    if (error) throw new Error(error.message);
 
-    return NextResponse.json({ user: data.user });
-  } catch (error) {
-    console.error("Server Error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    console.log("User authenticated:", data.user);
+    return res.status(200).json({ user: data.user });
+  } catch (error: unknown) {
+    console.error("Login error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Internal Server Error";
+    return res.status(500).json({ error: errorMessage });
   }
 }
