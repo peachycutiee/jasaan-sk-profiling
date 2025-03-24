@@ -1,5 +1,5 @@
+import supabase from "@/app/lib/supabaseClient";
 import { NextResponse } from "next/server";
-import supabase from "@/lib/supabaseClient"; // Adjusted import path for Next.js alias
 
 export async function POST(req: Request) {
   try {
