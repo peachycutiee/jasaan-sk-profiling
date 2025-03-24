@@ -1,21 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "@/app/auth/auth"; // Updated signIn function
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import HCaptcha from "@hcaptcha/react-hcaptcha"; // Import hCaptcha React component
-
-const siteKey = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || ""; // Load from env
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [captchaToken, setCaptchaToken] = useState(""); // Store hCaptcha token
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
+  // Ensure hCaptcha site key exists
+  const siteKey = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY;
+  if (!siteKey) {
+    console.error("hCaptcha site key is missing in environment variables.");
+  }
+
+  // Handle Login
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -24,11 +29,43 @@ const LoginPage = () => {
       return;
     }
 
+    setIsLoading(true);
+    setError("");
+
     try {
-      await signIn(email, password, captchaToken); // Pass hCaptcha token
-      router.push("/dashboard"); // Redirect on success
+      // Send request to backend API for hCaptcha verification
+      const captchaResponse = await fetch("/api/hcaptcha", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: captchaToken }),
+      });
+
+      const captchaData = await captchaResponse.json();
+
+      if (!captchaData.success) {
+        setError("hCaptcha verification failed. Please try again.");
+        setIsLoading(false);
+        return;
+      }
+
+      // Proceed with login
+      const loginResponse = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!loginResponse.ok) {
+        const errorData = await loginResponse.json();
+        throw new Error(errorData.error || "Login failed.");
+      }
+
+      // Redirect on success
+      router.push("/dashboard");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "An unknown error occurred.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -53,15 +90,21 @@ const LoginPage = () => {
 
           {/* hCaptcha Widget */}
           <div className="mb-4 flex justify-center">
-            <HCaptcha sitekey={siteKey} onVerify={setCaptchaToken} />
+            {siteKey && (
+              <HCaptcha
+              sitekey={siteKey}
+              onVerify={(token: string) => setCaptchaToken(token)} // Explicitly set type to string
+              onExpire={() => setCaptchaToken("")} 
+              />
+            )}
           </div>
 
           {/* Forgot Password Link */}
           <p className="text-right text-sm text-red-500 cursor-pointer">Forgot Password?</p>
 
           {/* Login Button */}
-          <button type="submit" className="w-full bg-red-600 text-white py-3 rounded-full mt-4 text-lg font-bold">
-            Login
+          <button type="submit" className="w-full bg-red-600 text-white py-3 rounded-full mt-4 text-lg font-bold" disabled={isLoading}>
+            {isLoading ? "Logging in..." : "Login"}
           </button>
 
           {/* Display error message if login fails */}
