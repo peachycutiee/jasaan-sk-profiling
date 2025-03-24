@@ -1,38 +1,44 @@
-import { NextApiRequest, NextApiResponse } from "next";
-import { supabase } from "@/app/auth/auth";
+import { NextResponse } from "next/server";
 
+const SECRET_KEY = process.env.HCAPTCHA_SECRET_KEY;
 const VERIFY_URL = "https://api.hcaptcha.com/siteverify";
-const SECRET_KEY = process.env.HCAPTCHA_SECRET_KEY!; // Use backend secret
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method Not Allowed" });
-  }
+export async function POST(req: Request) {
+    try {
+        const { token } = await req.json();
 
-  const { email, password, captchaToken } = req.body;
+        if (!token) {
+            return NextResponse.json({ error: "Missing hCaptcha token" }, { status: 400 });
+        }
 
-  // Validate hCaptcha Token
-  const hCaptchaResponse = await fetch(VERIFY_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      secret: SECRET_KEY,
-      response: captchaToken,
-    }),
-  });
+        if (!SECRET_KEY) {
+            return NextResponse.json({ error: "Server misconfiguration: Missing hCaptcha secret key" }, { status: 500 });
+        }
 
-  const hCaptchaData = await hCaptchaResponse.json();
+        // Prepare data for verification request
+        const data = new URLSearchParams();
+        data.append("secret", SECRET_KEY);
+        data.append("response", token);
 
-  if (!hCaptchaData.success) {
-    return res.status(400).json({ error: "hCaptcha verification failed", details: hCaptchaData["error-codes"] });
-  }
+        // Verify hCaptcha response
+        const hCaptchaRes = await fetch(VERIFY_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: data,
+        });
 
-  // Authenticate with Supabase
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (!hCaptchaRes.ok) {
+            return NextResponse.json({ error: "Failed to verify hCaptcha" }, { status: 500 });
+        }
 
-  if (error) {
-    return res.status(400).json({ error: error.message });
-  }
+        const hCaptchaData = await hCaptchaRes.json();
 
-  res.status(200).json({ user: data.user });
+        if (!hCaptchaData.success) {
+            return NextResponse.json({ error: "hCaptcha verification failed", details: hCaptchaData["error-codes"] }, { status: 400 });
+        }
+
+        return NextResponse.json({ success: true, message: "hCaptcha verified" });
+    } catch (error) {
+        return NextResponse.json({ error: "Internal server error", details: error }, { status: 500 });
+    }
 }
