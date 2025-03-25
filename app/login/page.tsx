@@ -40,7 +40,9 @@ const LoginPage = () => {
         body: JSON.stringify({ token: captchaToken }),
       });
 
-      const captchaData = await captchaResponse.json();
+      const rawCaptchaResponse = await captchaResponse.text(); // Debugging raw response
+      console.log("Raw hCaptcha response:", rawCaptchaResponse); // Log for debugging
+      const captchaData = JSON.parse(rawCaptchaResponse);
 
       if (!captchaData.success) {
         setError("hCaptcha verification failed. Please try again.");
