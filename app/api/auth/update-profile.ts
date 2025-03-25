@@ -1,6 +1,7 @@
-import { supabase } from '@/lib/supabaseClient'; // Ensure you initialize Supabase properly
+import supabase from '../../lib/supabaseClient'; // Ensure you initialize Supabase properly
+import { NextApiRequest, NextApiResponse } from 'next';
 
-export default async function handler(req, res) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end();
 
   const { name } = req.body;
