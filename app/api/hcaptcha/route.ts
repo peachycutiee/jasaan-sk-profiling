@@ -31,7 +31,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: "Failed to verify hCaptcha" }, { status: 500 });
     }
 
-    const hCaptchaData = await hCaptchaRes.json();
+    let hCaptchaData;
+    try {
+      hCaptchaData = await hCaptchaRes.json(); // Ensure response is valid JSON
+    } catch {
+      return NextResponse.json({ success: false, error: "Invalid response from hCaptcha" }, { status: 500 });
+    }
 
     if (!hCaptchaData.success) {
       return NextResponse.json({ success: false, error: "hCaptcha verification failed", details: hCaptchaData["error-codes"] }, { status: 400 });

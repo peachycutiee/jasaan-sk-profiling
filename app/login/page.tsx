@@ -42,6 +42,14 @@ const LoginPage = () => {
 
       const rawCaptchaResponse = await captchaResponse.text(); // Debugging raw response
       console.log("Raw hCaptcha response:", rawCaptchaResponse); // Log for debugging
+
+      // Prevent parsing empty responses
+      if (!rawCaptchaResponse.trim()) {
+        setError("hCaptcha server returned an empty response. Try again.");
+        setIsLoading(false);
+        return;
+      }
+
       const captchaData = JSON.parse(rawCaptchaResponse);
 
       if (!captchaData.success) {
@@ -94,9 +102,9 @@ const LoginPage = () => {
           <div className="mb-4 flex justify-center">
             {siteKey && (
               <HCaptcha
-              sitekey={siteKey}
-              onVerify={(token: string) => setCaptchaToken(token)} // Explicitly set type to string
-              onExpire={() => setCaptchaToken("")} 
+                sitekey={siteKey}
+                onVerify={(token: string) => setCaptchaToken(token)} // Explicitly set type to string
+                onExpire={() => setCaptchaToken("")} 
               />
             )}
           </div>
