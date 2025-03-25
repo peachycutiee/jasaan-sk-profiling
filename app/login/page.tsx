@@ -17,7 +17,7 @@ const LoginPage = () => {
   // Ensure hCaptcha site key exists
   const siteKey = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY;
   if (!siteKey) {
-    console.error("hCaptcha site key is missing in environment variables.");
+    console.error("🚨 hCaptcha site key is missing in environment variables.");
   }
 
   // Handle Login
@@ -33,21 +33,19 @@ const LoginPage = () => {
     setError("");
 
     try {
-      // Send request to backend API for hCaptcha verification
+      // 🔍 Debugging hCaptcha API call
       const captchaResponse = await fetch("/api/hcaptcha", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: captchaToken }),
       });
 
-      const rawCaptchaResponse = await captchaResponse.text(); // Debugging raw response
-      console.log("Raw hCaptcha response:", rawCaptchaResponse); // Log for debugging
+      console.log("🟢 Captcha API Response Status:", captchaResponse.status);
+      const rawCaptchaResponse = await captchaResponse.text(); // Debug raw response
+      console.log("🔍 Raw hCaptcha response:", rawCaptchaResponse);
 
-      // Prevent parsing empty responses
-      if (!rawCaptchaResponse.trim()) {
-        setError("hCaptcha server returned an empty response. Try again.");
-        setIsLoading(false);
-        return;
+      if (!rawCaptchaResponse) {
+        throw new Error("Empty response from hCaptcha API.");
       }
 
       const captchaData = JSON.parse(rawCaptchaResponse);
@@ -65,12 +63,20 @@ const LoginPage = () => {
         body: JSON.stringify({ email, password }),
       });
 
-      if (!loginResponse.ok) {
-        const errorData = await loginResponse.json();
-        throw new Error(errorData.error || "Login failed.");
+      console.log("🟢 Login API Response Status:", loginResponse.status);
+      const rawLoginResponse = await loginResponse.text();
+      console.log("🔍 Raw Login API response:", rawLoginResponse);
+
+      if (!rawLoginResponse) {
+        throw new Error("Empty response from Login API.");
       }
 
-      // Redirect on success
+      const loginData = JSON.parse(rawLoginResponse);
+
+      if (!loginResponse.ok) {
+        throw new Error(loginData.error || "Login failed.");
+      }
+
       router.push("/dashboard");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "An unknown error occurred.");
@@ -104,7 +110,7 @@ const LoginPage = () => {
               <HCaptcha
                 sitekey={siteKey}
                 onVerify={(token: string) => setCaptchaToken(token)} // Explicitly set type to string
-                onExpire={() => setCaptchaToken("")} 
+                onExpire={() => setCaptchaToken("")}
               />
             )}
           </div>
