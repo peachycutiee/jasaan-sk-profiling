@@ -1,14 +1,11 @@
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    console.log(body); // Example: Log or process the body to use it
-    // Example: Process login with Supabase/Auth Logic
-    
-    return NextResponse.json({ success: true, message: "Login successful!" });
-  } catch (error) {
-    console.error("Login error:", error);
-    return NextResponse.json({ success: false, message: "Login failed." }, { status: 400 });
+  const { email, password } = await req.json();
+
+  if (email === "test@example.com" && password === "password123") {
+    return NextResponse.json({ success: true, message: "Login successful" });
+  } else {
+    return NextResponse.json({ success: false, error: "Invalid credentials" }, { status: 401 });
   }
 }

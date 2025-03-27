@@ -33,36 +33,39 @@ const LoginPage = () => {
     setError("");
 
     try {
+      // Verify hCaptcha
       const captchaResponse = await fetch("/api/hcaptcha", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: captchaToken }),
       });
 
-      const rawCaptchaResponse = await captchaResponse.text();
-      const captchaData = JSON.parse(rawCaptchaResponse);
+      console.log("🟢 hCaptcha Response Status:", captchaResponse.status);
+      const captchaData = await captchaResponse.json();
+      console.log("🔍 hCaptcha response:", captchaData);
 
       if (!captchaData.success) {
-        setError("hCaptcha verification failed. Please try again.");
-        setIsLoading(false);
-        return;
+        throw new Error("hCaptcha verification failed.");
       }
 
+      // Attempt login
       const loginResponse = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
-      const rawLoginResponse = await loginResponse.text();
-      const loginData = JSON.parse(rawLoginResponse);
+      console.log("🟢 Login API Response Status:", loginResponse.status);
+      const loginData = await loginResponse.json();
+      console.log("🔍 Login API response:", loginData);
 
       if (!loginResponse.ok) {
         throw new Error(loginData.error || "Login failed.");
       }
 
-      router.push("/dashboard"); // Redirects to dashboard
-    } catch (err: unknown) {
+      router.push("/dashboard"); // Redirect after successful login
+    } catch (err) {
+      console.error("❌ Login Error:", err);
       setError(err instanceof Error ? err.message : "An unknown error occurred.");
     } finally {
       setIsLoading(false);
