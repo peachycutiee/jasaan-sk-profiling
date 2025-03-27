@@ -33,21 +33,13 @@ const LoginPage = () => {
     setError("");
 
     try {
-      // 🔍 Debugging hCaptcha API call
       const captchaResponse = await fetch("/api/hcaptcha", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: captchaToken }),
       });
 
-      console.log("🟢 Captcha API Response Status:", captchaResponse.status);
-      const rawCaptchaResponse = await captchaResponse.text(); // Debug raw response
-      console.log("🔍 Raw hCaptcha response:", rawCaptchaResponse);
-
-      if (!rawCaptchaResponse) {
-        throw new Error("Empty response from hCaptcha API.");
-      }
-
+      const rawCaptchaResponse = await captchaResponse.text();
       const captchaData = JSON.parse(rawCaptchaResponse);
 
       if (!captchaData.success) {
@@ -56,28 +48,20 @@ const LoginPage = () => {
         return;
       }
 
-      // Proceed with login
       const loginResponse = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
-      console.log("🟢 Login API Response Status:", loginResponse.status);
       const rawLoginResponse = await loginResponse.text();
-      console.log("🔍 Raw Login API response:", rawLoginResponse);
-
-      if (!rawLoginResponse) {
-        throw new Error("Empty response from Login API.");
-      }
-
       const loginData = JSON.parse(rawLoginResponse);
 
       if (!loginResponse.ok) {
         throw new Error(loginData.error || "Login failed.");
       }
 
-      router.push("/dashboard");
+      router.push("/dashboard"); // Redirects to dashboard
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "An unknown error occurred.");
     } finally {
@@ -101,15 +85,29 @@ const LoginPage = () => {
         <p className="text-gray-700">Monitor Jasaan Population</p>
 
         <form onSubmit={handleLogin} className="mt-6 w-full max-w-md">
-          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required className="w-full p-3 border rounded-full mb-4" />
-          <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required className="w-full p-3 border rounded-full mb-2" />
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full p-3 border rounded-full mb-4"
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="w-full p-3 border rounded-full mb-2"
+          />
 
           {/* hCaptcha Widget */}
           <div className="mb-4 flex justify-center">
             {siteKey && (
               <HCaptcha
                 sitekey={siteKey}
-                onVerify={(token: string) => setCaptchaToken(token)} // Explicitly set type to string
+                onVerify={(token: string) => setCaptchaToken(token)}
                 onExpire={() => setCaptchaToken("")}
               />
             )}
@@ -119,7 +117,11 @@ const LoginPage = () => {
           <p className="text-right text-sm text-red-500 cursor-pointer">Forgot Password?</p>
 
           {/* Login Button */}
-          <button type="submit" className="w-full bg-red-600 text-white py-3 rounded-full mt-4 text-lg font-bold" disabled={isLoading}>
+          <button
+            type="submit"
+            className="w-full bg-red-600 text-white py-3 rounded-full mt-4 text-lg font-bold"
+            disabled={isLoading}
+          >
             {isLoading ? "Logging in..." : "Login"}
           </button>
 
@@ -129,7 +131,9 @@ const LoginPage = () => {
           {/* Sign Up Link */}
           <div className="mt-4 flex justify-center w-full">
             <Link href="/signup">
-              <span className="text-black">Don’t have an account? <span className="text-red-600 font-bold cursor-pointer">Sign Up</span></span>
+              <span className="text-black">
+                Don’t have an account? <span className="text-red-600 font-bold cursor-pointer">Sign Up</span>
+              </span>
             </Link>
           </div>
         </form>
