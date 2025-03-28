@@ -13,6 +13,9 @@ export async function POST(req: Request) {
     // Attempt to sign in with Supabase Auth
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
+    // Log response from Supabase
+    console.log("Supabase Auth Response:", { data, error });
+
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 401 });
     }
@@ -23,7 +26,7 @@ export async function POST(req: Request) {
       user: data.user 
     });
   } catch (err) {
-    console.error(err);
+    console.error("Server Error:", err);
     return NextResponse.json({ success: false, error: "Server error" }, { status: 500 });
   }
 }
