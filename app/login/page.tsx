@@ -14,13 +14,11 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  // Ensure hCaptcha site key exists
   const siteKey = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY;
   if (!siteKey) {
     console.error("🚨 hCaptcha site key is missing in environment variables.");
   }
 
-  // Handle Login
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -33,40 +31,23 @@ const LoginPage = () => {
     setError("");
 
     try {
-      // Verify hCaptcha
-      const captchaResponse = await fetch("/api/hcaptcha", {
+      const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: captchaToken }),
+        body: JSON.stringify({ email, password, captchaToken }),
       });
 
-      console.log("🟢 hCaptcha Response Status:", captchaResponse.status);
-      const captchaData = await captchaResponse.json();
-      console.log("🔍 hCaptcha response:", captchaData);
+      const data = await response.json();
 
-      if (!captchaData.success) {
-        throw new Error("hCaptcha verification failed.");
+      if (!response.ok) {
+        throw new Error(data.error || "Login failed.");
       }
 
-      // Attempt login
-      const loginResponse = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      console.log("🟢 Login API Response Status:", loginResponse.status);
-      const loginData = await loginResponse.json();
-      console.log("🔍 Login API response:", loginData);
-
-      if (!loginResponse.ok) {
-        throw new Error(loginData.error || "Login failed.");
-      }
-
-      router.push("/dashboard"); // Redirect after successful login
+      router.push("/dashboard"); // Redirect on success
     } catch (err) {
       console.error("❌ Login Error:", err);
       setError(err instanceof Error ? err.message : "An unknown error occurred.");
+      setCaptchaToken(""); // Reset hCaptcha token on failure
     } finally {
       setIsLoading(false);
     }
@@ -110,7 +91,7 @@ const LoginPage = () => {
             {siteKey && (
               <HCaptcha
                 sitekey={siteKey}
-                onVerify={(token: string) => setCaptchaToken(token)}
+                onVerify={(token:string) => setCaptchaToken(token)}
                 onExpire={() => setCaptchaToken("")}
               />
             )}
