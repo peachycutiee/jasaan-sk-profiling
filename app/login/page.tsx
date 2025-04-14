@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
@@ -11,9 +11,10 @@ import HCaptcha from "@hcaptcha/react-hcaptcha"
 const LoginPage = () => {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [captchaToken, setCaptchaToken] = useState("") // Store hCaptcha token
+  const [captchaToken, setCaptchaToken] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const captchaRef = useRef<HCaptcha>(null)
   const router = useRouter()
 
   const siteKey = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY
@@ -37,17 +38,20 @@ const LoginPage = () => {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, captchaToken }),
+        body: JSON.stringify({
+          email,
+          password,
+          captchaToken,
+        }),
       })
 
       const data = await response.json()
-      console.log("📥 Login API response:", {
-        status: response.status,
-        success: data.success,
-        error: data.error || "none",
-      })
+      console.log("📥 Login API response status:", response.status)
 
       if (!response.ok) {
+        // Reset captcha on failure
+        captchaRef.current?.resetCaptcha()
+        setCaptchaToken("")
         throw new Error(data.error || "Login failed.")
       }
 
@@ -62,7 +66,6 @@ const LoginPage = () => {
     } catch (err) {
       console.error("❌ Login Error:", err)
       setError(err instanceof Error ? err.message : "An unknown error occurred.")
-      setCaptchaToken("") // Reset hCaptcha token on failure
     } finally {
       setIsLoading(false)
     }
@@ -105,9 +108,20 @@ const LoginPage = () => {
           <div className="mb-4 flex justify-center">
             {siteKey && (
               <HCaptcha
+                ref={captchaRef}
                 sitekey={siteKey}
-                onVerify={(token: string) => setCaptchaToken(token)}
-                onExpire={() => setCaptchaToken("")}
+                onVerify={(token: string) => {
+                  console.log("✅ Captcha verified, token length:", token.length)
+                  setCaptchaToken(token)
+                }}
+                onExpire={() => {
+                  console.log("⚠️ Captcha expired")
+                  setCaptchaToken("")
+                }}
+                onError={(err) => {
+                  console.error("❌ Captcha error:", err)
+                  setCaptchaToken("")
+                }}
               />
             )}
           </div>
