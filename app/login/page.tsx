@@ -8,13 +8,19 @@ import Link from "next/link"
 import Image from "next/image"
 import HCaptcha from "@hcaptcha/react-hcaptcha"
 
+// Define an interface for the HCaptcha instance
+interface HCaptchaInstance {
+  resetCaptcha: () => void;
+}
+
 const LoginPage = () => {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [captchaToken, setCaptchaToken] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const captchaRef = useRef<HCaptcha>(null)
+  // Use the interface for proper typing
+  const captchaRef = useRef<HCaptchaInstance | null>(null)
   const router = useRouter()
 
   const siteKey = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY
@@ -118,7 +124,7 @@ const LoginPage = () => {
                   console.log("⚠️ Captcha expired")
                   setCaptchaToken("")
                 }}
-                onError={(err) => {
+                onError={(err: Error) => {
                   console.error("❌ Captcha error:", err)
                   setCaptchaToken("")
                 }}
