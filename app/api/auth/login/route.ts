@@ -12,23 +12,33 @@ async function verifyCaptcha(token: string) {
   }
 
   try {
-    console.log("🔍 Verifying captcha token:", token.substring(0, 10) + "...")
+    console.log("🔍 Verifying captcha token:", token.substring(0, 10) + "...", "Token length:", token.length)
+    console.log("🔑 Using secret key:", secret.substring(0, 5) + "...")  // Print first few chars for debugging
 
-    const response = await fetch("https://api.hcaptcha.com/siteverify", {
+    // FIXED URL: removed "api." prefix
+    const response = await fetch("https://hcaptcha.com/siteverify", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
         secret,
         response: token,
+        // Add sitekey for additional verification
+        sitekey: process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || "",
       }),
     })
 
-    if (!response.ok) {
-      console.error("❌ hCaptcha API response not OK:", response.status, response.statusText)
+    const responseText = await response.text() // Get raw response first
+    console.log("🔄 Raw hCaptcha API response:", responseText)
+    
+    // Parse JSON after logging the raw response
+    let data
+    try {
+      data = JSON.parse(responseText)
+    } catch (e) {
+      console.error("❌ Failed to parse hCaptcha response:", e)
       return false
     }
 
-    const data = await response.json()
     console.log("🔍 hCaptcha Verification Response:", data)
 
     if (!data.success) {
@@ -68,7 +78,7 @@ export async function POST(req: Request) {
 
     if (!isCaptchaValid) {
       return NextResponse.json(
-        { success: false, error: "Captcha verification failed. Please try again." },
+        { success: false, error: "Captcha verification process failed" }, // Match the exact error message
         { status: 401 },
       )
     }
