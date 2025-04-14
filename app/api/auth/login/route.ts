@@ -32,20 +32,21 @@ export async function POST(req: Request) {
   try {
     const { email, password, captchaToken } = await req.json();
 
-    // Ensure all required fields are provided
+    console.log("📨 Received login request", { email, captchaTokenPresent: !!captchaToken });
+
     if (!email || !password || !captchaToken) {
+      console.warn("⚠️ Missing fields", { email, passwordPresent: !!password, captchaTokenPresent: !!captchaToken });
       return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 });
     }
 
-    // Verify hCaptcha first
     const isCaptchaValid = await verifyCaptcha(captchaToken);
+    console.log("🔍 hCaptcha Verification Result:", isCaptchaValid);
+
     if (!isCaptchaValid) {
       return NextResponse.json({ success: false, error: "Captcha verification failed" }, { status: 401 });
     }
 
-    // Attempt to sign in with Supabase Auth
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
     console.log("🟢 Supabase Response:", data, error);
 
     if (error) {
@@ -57,6 +58,7 @@ export async function POST(req: Request) {
       message: "Login successful", 
       user: data.user 
     });
+
   } catch (err) {
     console.error("❌ Server Error:", err);
     return NextResponse.json({ success: false, error: "Server error" }, { status: 500 });
