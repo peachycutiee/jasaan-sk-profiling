@@ -1,16 +1,13 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import HCaptcha from "@hcaptcha/react-hcaptcha"
 
-// Define an interface for the HCaptcha instance
 interface HCaptchaInstance {
-  resetCaptcha: () => void;
+  resetCaptcha: () => void
 }
 
 const LoginPage = () => {
@@ -19,13 +16,13 @@ const LoginPage = () => {
   const [captchaToken, setCaptchaToken] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  // Use the interface for proper typing
+
   const captchaRef = useRef<HCaptchaInstance | null>(null)
   const router = useRouter()
-
   const siteKey = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY
+
   if (!siteKey) {
-    console.error("🚨 hCaptcha site key is missing in environment variables.")
+    console.error("🚨 hCaptcha site key is missing.")
   }
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -40,38 +37,32 @@ const LoginPage = () => {
     setError("")
 
     try {
-      console.log("🔄 Sending login request to API...")
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          password,
-          captchaToken,
-        }),
+        body: JSON.stringify({ email, password, captchaToken }),
       })
 
       const data = await response.json()
-      console.log("📥 Login API response status:", response.status)
 
       if (!response.ok) {
-        // Reset captcha on failure
         captchaRef.current?.resetCaptcha()
         setCaptchaToken("")
         throw new Error(data.error || "Login failed.")
       }
 
-      // Store user data in localStorage or sessionStorage
       if (data.user) {
         localStorage.setItem("user", JSON.stringify(data.user))
-        console.log("✅ Login successful, redirecting to dashboard")
-        router.push("/dashboard") // Redirect on success
+        router.push("/dashboard")
       } else {
         throw new Error("No user data returned")
       }
-    } catch (err) {
-      console.error("❌ Login Error:", err)
-      setError(err instanceof Error ? err.message : "An unknown error occurred.")
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError("An unknown error occurred.")
+      }
     } finally {
       setIsLoading(false)
     }
@@ -79,15 +70,14 @@ const LoginPage = () => {
 
   return (
     <div className="flex h-screen items-center justify-center">
-      {/* Left Side - Logo */}
+      {/* Left - Logo */}
       <div className="w-1/2 flex justify-center items-center">
         <Image src="/jasaan-logo.png" width={1000} height={1000} alt="Municipality of Jasaan" className="w-64" />
       </div>
 
-      {/* Vertical Divider */}
       <div className="w-px h-3/4 bg-gray-300"></div>
 
-      {/* Right Side - Login Form */}
+      {/* Right - Form */}
       <div className="w-1/2 flex flex-col items-left p-10">
         <h1 className="text-4xl font-bold text-red-600">Welcome!</h1>
         <p className="text-gray-700">Monitor Jasaan Population</p>
@@ -110,32 +100,21 @@ const LoginPage = () => {
             className="w-full p-3 border rounded-full mb-2"
           />
 
-          {/* hCaptcha Widget */}
+          {/* hCaptcha */}
           <div className="mb-4 flex justify-center">
             {siteKey && (
               <HCaptcha
                 ref={captchaRef}
                 sitekey={siteKey}
-                onVerify={(token: string) => {
-                  console.log("✅ Captcha verified, token length:", token.length)
-                  setCaptchaToken(token)
-                }}
-                onExpire={() => {
-                  console.log("⚠️ Captcha expired")
-                  setCaptchaToken("")
-                }}
-                onError={(err: Error) => {
-                  console.error("❌ Captcha error:", err)
-                  setCaptchaToken("")
-                }}
+                onVerify={(token: string) => setCaptchaToken(token)}
+                onExpire={() => setCaptchaToken("")}
+                onError={() => setCaptchaToken("")}
               />
             )}
           </div>
 
-          {/* Forgot Password Link */}
           <p className="text-right text-sm text-red-500 cursor-pointer">Forgot Password?</p>
 
-          {/* Login Button */}
           <button
             type="submit"
             className="w-full bg-red-600 text-white py-3 rounded-full mt-4 text-lg font-bold"
@@ -144,10 +123,8 @@ const LoginPage = () => {
             {isLoading ? "Logging in..." : "Login"}
           </button>
 
-          {/* Display error message if login fails */}
           {error && <p className="text-red-500 text-center mt-2">{error}</p>}
 
-          {/* Sign Up Link */}
           <div className="mt-4 flex justify-center w-full">
             <Link href="/signup">
               <span className="text-black">
