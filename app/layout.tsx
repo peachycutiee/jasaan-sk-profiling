@@ -1,33 +1,28 @@
-// app/layout.tsx (Remove "use client" from this file)
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+// app/layout.tsx
+
+import { Inter } from "next/font/google";
 import "./globals.css";
-import { Providers } from "./providers"; // Import client component
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata: Metadata = {
+// Metadata must be exported from a server component
+export const metadata = {
   title: "JASAAN POPULATION",
   description: "Made with Next.JS",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <Providers>{children}</Providers>
+      <body className={inter.className}>
+        {/* Ensure no "use client" directive here */}
+        {children}
       </body>
     </html>
   );
