@@ -17,7 +17,7 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "types": ["node", "@supabase/auth-helpers-nextjs", "@supabase/auth-helpers-react"],
+    "types": ["node"], // Remove @supabase/auth-helpers-nextjs and @supabase/auth-helpers-react
     "plugins": [
       {
         "name": "next"

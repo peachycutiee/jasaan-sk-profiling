@@ -1,9 +1,8 @@
-"use client";
-
+// app/layout.tsx (Remove "use client" from this file)
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Providers } from "./providers"; // Import Providers
+import { Providers } from "./providers"; // Import client component
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

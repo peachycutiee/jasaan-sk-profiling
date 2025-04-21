@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { FaUserCircle } from "react-icons/fa";
-import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs";
+import { createBrowserClient } from "@supabase/ssr"; // Updated import
+import { SupabaseClient } from "@supabase/supabase-js"; // Import SupabaseClient from @supabase/supabase-js
 
 // Reusable component
 const YouthCategory = ({
@@ -42,9 +43,24 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const router = useRouter();
-  const supabase = createPagesBrowserClient();
+
+  // Retrieve Supabase credentials from environment variables
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  let supabase: SupabaseClient | null = null;
+
+  if (supabaseUrl && supabaseAnonKey) {
+    supabase = createBrowserClient(supabaseUrl, supabaseAnonKey); // Pass SUPABASE_URL and SUPABASE_ANON_KEY
+  } else {
+    console.error("Supabase credentials are missing. Please check your environment variables.");
+  }
 
   useEffect(() => {
+    if (!supabase) {
+      return;
+    }
+
     const fetchUserAndData = async () => {
       try {
         // Fetch user
@@ -90,7 +106,9 @@ export default function Dashboard() {
   }, [supabase, router]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
     router.push("/login");
   };
 

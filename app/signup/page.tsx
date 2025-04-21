@@ -1,26 +1,52 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import HCaptcha from "@hcaptcha/react-hcaptcha"; // Import hCaptcha
+import { createBrowserClient } from "@supabase/ssr";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
+import Image from "next/image"; // Import Image from next/image
+import Link from "next/link"; // Import Link from next/link
+import { SupabaseClient } from "@supabase/supabase-js"; // Import SupabaseClient from @supabase/supabase-js
 
 export default function Signup() {
-  const supabase = createClientComponentClient();
-  const router = useRouter();
+  const router = useRouter(); // Always call useRouter unconditionally
+
+  // Retrieve Supabase credentials from environment variables
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  let supabase: SupabaseClient | null = null; // Use the correct type
+
+  if (supabaseUrl && supabaseAnonKey) {
+    supabase = createBrowserClient(supabaseUrl, supabaseAnonKey); // Pass SUPABASE_URL and SUPABASE_ANON_KEY
+  } else {
+    console.error("Supabase credentials are missing. Please check your environment variables.");
+  }
+
   const [form, setForm] = useState({ fullName: "", email: "", password: "" });
   const [captchaToken, setCaptchaToken] = useState(""); // Store hCaptcha token
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false); // Loading state
   const [showPassword, setShowPassword] = useState(false); // Password visibility toggle
 
+  useEffect(() => {
+    if (!supabase) {
+      return;
+    }
+
+    // Add any logic that depends on supabase here
+  }, [supabase]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!supabase) {
+      console.error("Supabase client is not initialized.");
+      return;
+    }
+
     e.preventDefault();
     setError("");
     setIsLoading(true);
