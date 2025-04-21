@@ -1,78 +1,70 @@
-import { createClient } from "@supabase/supabase-js"
-import { NextResponse } from "next/server"
+import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import axios from "axios";
+import jwt from "jsonwebtoken"; // Updated import
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+// Load environment variables
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const HCAPTCHA_SECRET_KEY = process.env.HCAPTCHA_SECRET_KEY!;
+const NEXT_JWT_SECRET_KEY = process.env.NEXT_JWT_SECRET_KEY!;
 
-async function verifyCaptcha(token: string) {
-  const secret = process.env.HCAPTCHA_SECRET_KEY
-  if (!secret) {
-    console.error("🚨 hCaptcha secret key missing.")
-    return false
-  }
+// Initialize Supabase client
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+type LoginRequestBody = {
+  email: string;
+  password: string;
+  captchaToken: string;
+};
+
+export async function POST(request: Request) {
   try {
-    const verifyUrl = "https://hcaptcha.com/siteverify"
-    const params = new URLSearchParams({
-      secret,
-      response: token,
-      sitekey: process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY || ""
-    })
+    // Parse the request body
+    const { email, password, captchaToken } = (await request.json()) as LoginRequestBody;
 
-    const response = await fetch(verifyUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: params
-    })
+    // Step 1: Verify hCaptcha token
+    const captchaResponse = await axios.post(
+      "https://hcaptcha.com/siteverify",
+      null,
+      {
+        params: {
+          secret: HCAPTCHA_SECRET_KEY,
+          response: captchaToken,
+        },
+      }
+    );
 
-    const text = await response.text()
-    const data = JSON.parse(text)
-
-    if (!data.success) {
-      console.error("❌ Captcha failed:", data["error-codes"])
+    if (!captchaResponse.data.success) {
+      return NextResponse.json({ error: "Invalid hCaptcha verification." }, { status: 400 });
     }
 
-    return data.success
-  } catch (error) {
-    console.error("❌ Captcha verification error:", error)
-    return false
-  }
-}
-
-export async function POST(req: Request) {
-  try {
-    const { email, password, captchaToken } = await req.json()
-
-    if (!email || !password || !captchaToken) {
-      return NextResponse.json(
-        { success: false, error: "Missing required fields" },
-        { status: 400 }
-      )
-    }
-
-    const isCaptchaValid = await verifyCaptcha(captchaToken)
-    if (!isCaptchaValid) {
-      return NextResponse.json(
-        { success: false, error: "Captcha verification process failed" },
-        { status: 401 }
-      )
-    }
-
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    // Step 2: Authenticate user with Supabase
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
     if (error) {
-      return NextResponse.json({ success: false, error: error.message }, { status: 401 })
+      return NextResponse.json({ error: error.message || "Authentication failed." }, { status: 401 });
     }
 
+    // Step 3: Generate JWT (optional, for session management)
+    const token = jwt.sign({ userId: data.user?.id }, NEXT_JWT_SECRET_KEY, {
+      expiresIn: "1h", // Token expires in 1 hour
+    });
+
+    // Step 4: Return user data and token
     return NextResponse.json({
-      success: true,
-      message: "Login successful",
-      user: data.user,
-    })
-  } catch (err: unknown) {
-    console.error("❌ Server error:", err)
-    return NextResponse.json({ success: false, error: "Server error" }, { status: 500 })
+      user: {
+        id: data.user?.id,
+        email: data.user?.email,
+        role: data.user?.role,
+      },
+      token,
+    });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: "An unexpected error occurred." }, { status: 500 });
   }
 }

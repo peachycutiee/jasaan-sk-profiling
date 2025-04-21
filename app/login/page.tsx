@@ -1,72 +1,73 @@
-"use client"
+"use client";
 
-import { useState, useRef } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import Image from "next/image"
-import HCaptcha from "@hcaptcha/react-hcaptcha"
+import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
 
 interface HCaptchaInstance {
-  resetCaptcha: () => void
+  resetCaptcha: () => void;
 }
 
 const LoginPage = () => {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [captchaToken, setCaptchaToken] = useState("")
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const captchaRef = useRef<HCaptchaInstance | null>(null)
-  const router = useRouter()
-  const siteKey = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY
+  const captchaRef = useRef<HCaptchaInstance | null>(null);
+  const router = useRouter();
+  const siteKey = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY;
 
   if (!siteKey) {
-    console.error("🚨 hCaptcha site key is missing.")
+    console.error("🚨 hCaptcha site key is missing.");
   }
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!captchaToken) {
-      setError("Please complete the hCaptcha verification.")
-      return
+      setError("Please complete the hCaptcha verification.");
+      return;
     }
 
-    setIsLoading(true)
-    setError("")
+    setIsLoading(true);
+    setError("");
 
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, captchaToken }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
-        captchaRef.current?.resetCaptcha()
-        setCaptchaToken("")
-        throw new Error(data.error || "Login failed.")
+        captchaRef.current?.resetCaptcha();
+        setCaptchaToken("");
+        throw new Error(data.error || "Login failed.");
       }
 
       if (data.user) {
-        localStorage.setItem("user", JSON.stringify(data.user))
-        router.push("/dashboard")
+        // Store the token in localStorage or a secure cookie
+        localStorage.setItem("token", data.token);
+        router.push("/dashboard");
       } else {
-        throw new Error("No user data returned")
+        throw new Error("No user data returned");
       }
     } catch (err: unknown) {
       if (err instanceof Error) {
-        setError(err.message)
+        setError(err.message);
       } else {
-        setError("An unknown error occurred.")
+        setError("An unknown error occurred.");
       }
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="flex h-screen items-center justify-center">
@@ -135,7 +136,7 @@ const LoginPage = () => {
         </form>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default LoginPage
+export default LoginPage;
