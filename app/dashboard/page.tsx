@@ -19,15 +19,19 @@ const YouthCategory = ({
     <h3 className="text-lg font-bold mb-3">{title}</h3>
     <hr className="border-t border-red-500 mb-3" />
     <div className="grid grid-cols-4 gap-3">
-      {data.map((item) => (
-        <div
-          key={item.label}
-          className="p-4 border-2 border-red-500 rounded-lg text-center bg-white"
-        >
-          <h4 className="font-semibold text-red-600">{item.label}</h4>
-          <p className="text-2xl font-bold text-red-600">{item.count}</p>
-        </div>
-      ))}
+      {data.length > 0 ? (
+        data.map((item) => (
+          <div
+            key={item.label}
+            className="p-4 border-2 border-red-500 rounded-lg text-center bg-white hover:bg-gray-50 transition-colors"
+          >
+            <h4 className="font-semibold text-red-600">{item.label}</h4>
+            <p className="text-2xl font-bold text-red-600">{item.count}</p>
+          </div>
+        ))
+      ) : (
+        <p className="text-center text-gray-500">No data available.</p>
+      )}
     </div>
   </section>
 );
@@ -42,20 +46,22 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchUserAndData = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        router.push("/login");
-      } else {
-        setUser(user.email ? { email: user.email } : null);
-      }
-
       try {
-        const { data, error } = await supabase.from("youth_data").select("*");
+        // Fetch user
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
 
-        if (error) throw error;
+        if (!user) {
+          router.push("/login");
+        } else {
+          setUser(user.email ? { email: user.email } : null);
+        }
+
+        // Fetch youth data
+        const { data, error: fetchError } = await supabase.from("youth_data").select("*");
+
+        if (fetchError) throw fetchError;
 
         const categorized: Record<string, { label: string; count: number }[]> = {};
 
@@ -73,7 +79,7 @@ export default function Dashboard() {
         if (err instanceof Error) {
           setError(err.message);
         } else {
-          setError("An unknown error occurred");
+          setError("An unknown error occurred.");
         }
       } finally {
         setLoading(false);
@@ -103,21 +109,21 @@ export default function Dashboard() {
         </div>
 
         <nav className="space-y-4 flex-1">
-          <Link href="/dashboard" className="block font-bold">
+          <Link href="/dashboard" className="block font-bold hover:text-gray-300 transition-colors">
             OVERVIEW
           </Link>
-          <Link href="/manage-data" className="block hover:underline">
+          <Link href="/manage-data" className="block hover:underline hover:text-gray-300 transition-colors">
             MANAGE DATA
           </Link>
-          <Link href="/reports" className="block hover:underline">
+          <Link href="/reports" className="block hover:underline hover:text-gray-300 transition-colors">
             REPORTS
           </Link>
-          <Link href="/settings" className="block hover:underline">
+          <Link href="/settings" className="block hover:underline hover:text-gray-300 transition-colors">
             SETTINGS
           </Link>
         </nav>
 
-        <button onClick={handleLogout} className="mt-auto text-left text-sm">
+        <button onClick={handleLogout} className="mt-auto text-left text-sm hover:text-gray-300 transition-colors">
           LOGOUT
         </button>
       </aside>
@@ -139,7 +145,7 @@ export default function Dashboard() {
             {Object.entries(totalCounts).map(([category, count]) => (
               <div
                 key={category}
-                className="p-8 border-4 border-red-500 rounded-lg text-center shadow-md bg-white"
+                className="p-8 border-4 border-red-500 rounded-lg text-center shadow-md bg-white hover:bg-gray-50 transition-colors"
               >
                 <h4 className="font-bold text-red-600 text-lg">{category.toUpperCase()}</h4>
                 <p className="text-4xl font-bold text-red-600">{count}</p>
@@ -150,9 +156,11 @@ export default function Dashboard() {
 
         <div className="max-h-[75vh] overflow-y-auto space-y-6">
           {loading ? (
-            <p className="text-center text-gray-600">Loading data...</p>
+            <p className="text-center text-gray-600">Fetching data...</p>
           ) : error ? (
             <p className="text-center text-red-600">{error}</p>
+          ) : Object.keys(youthData).length === 0 ? (
+            <p className="text-center text-gray-500">No youth data available.</p>
           ) : (
             Object.entries(youthData).map(([key, data]) => (
               <YouthCategory key={key} title={key} data={data} />

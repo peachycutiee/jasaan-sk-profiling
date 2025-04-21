@@ -16,6 +16,7 @@ const LoginPage = () => {
   const [captchaToken, setCaptchaToken] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const captchaRef = useRef<HCaptchaInstance | null>(null);
   const router = useRouter();
@@ -52,11 +53,10 @@ const LoginPage = () => {
       }
 
       if (data.user) {
-        // Store the token in localStorage or a secure cookie
         localStorage.setItem("token", data.token);
         router.push("/dashboard");
       } else {
-        throw new Error("No user data returned");
+        throw new Error("No user data returned.");
       }
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -92,14 +92,23 @@ const LoginPage = () => {
             required
             className="w-full p-3 border rounded-full mb-4"
           />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="w-full p-3 border rounded-full mb-2"
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full p-3 border rounded-full mb-2 pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-0 px-3 py-2 text-gray-500 hover:text-red-600 focus:outline-none"
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </div>
 
           {/* hCaptcha */}
           <div className="mb-4 flex justify-center">
@@ -118,7 +127,7 @@ const LoginPage = () => {
 
           <button
             type="submit"
-            className="w-full bg-red-600 text-white py-3 rounded-full mt-4 text-lg font-bold"
+            className="w-full bg-red-600 text-white py-3 rounded-full mt-4 text-lg font-bold disabled:bg-gray-400"
             disabled={isLoading}
           >
             {isLoading ? "Logging in..." : "Login"}

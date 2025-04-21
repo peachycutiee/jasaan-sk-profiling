@@ -1,4 +1,4 @@
-"use client";
+"use client"; // Ensure this is present
 
 import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs";
 import { SessionContextProvider } from "@supabase/auth-helpers-react";
