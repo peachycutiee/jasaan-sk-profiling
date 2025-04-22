@@ -23,6 +23,8 @@ export async function POST(request: Request) {
     // Parse the request body
     const { email, password, captchaToken } = (await request.json()) as LoginRequestBody;
 
+    console.log("Received captchaToken:", captchaToken); // Debugging: Log received token
+
     // Step 1: Verify hCaptcha token
     const captchaResponse = await axios.post(
       "https://hcaptcha.com/siteverify",
@@ -35,7 +37,7 @@ export async function POST(request: Request) {
       }
     );
 
-    console.log("hCaptcha response:", captchaResponse.data);
+    console.log("hCaptcha verification response:", captchaResponse.data); // Debugging: Log hCaptcha response
 
     if (!captchaResponse.data.success) {
       return NextResponse.json({ error: "Invalid hCaptcha verification." }, { status: 400 });
@@ -57,7 +59,7 @@ export async function POST(request: Request) {
       expiresIn: "1h", // Token expires in 1 hour
     });
 
-    console.log("Generated JWT token:", token);
+    console.log("Generated JWT token:", token); // Debugging: Log generated token
 
     // Step 4: Return user data and token
     return NextResponse.json({

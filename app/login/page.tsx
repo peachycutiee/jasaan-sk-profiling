@@ -38,6 +38,7 @@ const LoginPage = () => {
     setError("");
 
     try {
+      console.log("Sending captchaToken:", captchaToken); // Debugging: Log the captchaToken
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -45,6 +46,7 @@ const LoginPage = () => {
       });
 
       const data = await response.json();
+      console.log("Server response:", data); // Debugging: Log server response
 
       if (!response.ok) {
         captchaRef.current?.resetCaptcha();
@@ -114,7 +116,7 @@ const LoginPage = () => {
           <div className="mb-4 flex justify-center">
             {siteKey && (
               <HCaptcha
-                ref={captchaRef}
+                ref={(el: HCaptchaInstance | null) => (captchaRef.current = el)} // Explicitly define the type of `el`
                 sitekey={siteKey}
                 onVerify={(token: string) => setCaptchaToken(token)}
                 onExpire={() => setCaptchaToken("")}
