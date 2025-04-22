@@ -12,7 +12,7 @@
     "@auth/supabase-adapter": "^1.8.0",
     "@hcaptcha/react-hcaptcha": "^1.12.0",
     "@supabase/ssr": "^0.6.1",
-    "@supabase/supabase-js": "^2.49.1",
+    "@supabase/supabase-js": "^2.49.4",
     "@types/jsonwebtoken": "^9.0.9",
     "axios": "^1.8.4",
     "hcaptcha": "^0.2.0",
