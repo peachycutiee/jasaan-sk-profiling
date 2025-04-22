@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import axios from "axios";
-import jwt from "jsonwebtoken"; // Updated import
+import jwt from "jsonwebtoken";
 
 // Load environment variables
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -35,6 +35,8 @@ export async function POST(request: Request) {
       }
     );
 
+    console.log("hCaptcha response:", captchaResponse.data);
+
     if (!captchaResponse.data.success) {
       return NextResponse.json({ error: "Invalid hCaptcha verification." }, { status: 400 });
     }
@@ -46,6 +48,7 @@ export async function POST(request: Request) {
     });
 
     if (error) {
+      console.error("Supabase auth error:", error.message);
       return NextResponse.json({ error: error.message || "Authentication failed." }, { status: 401 });
     }
 
@@ -53,6 +56,8 @@ export async function POST(request: Request) {
     const token = jwt.sign({ userId: data.user?.id }, NEXT_JWT_SECRET_KEY, {
       expiresIn: "1h", // Token expires in 1 hour
     });
+
+    console.log("Generated JWT token:", token);
 
     // Step 4: Return user data and token
     return NextResponse.json({
@@ -64,7 +69,7 @@ export async function POST(request: Request) {
       token,
     });
   } catch (err) {
-    console.error(err);
+    console.error("Unexpected error:", err);
     return NextResponse.json({ error: "An unexpected error occurred." }, { status: 500 });
   }
 }
