@@ -116,7 +116,7 @@ const LoginPage = () => {
           <div className="mb-4 flex justify-center">
             {siteKey && (
               <HCaptcha
-                ref={(el: HCaptchaInstance | null) => (captchaRef.current = el)} // Explicitly define the type of `el`
+                ref={(el: HCaptchaInstance | null) => (captchaRef.current = el)}
                 sitekey={siteKey}
                 onVerify={(token: string) => setCaptchaToken(token)}
                 onExpire={() => setCaptchaToken("")}
