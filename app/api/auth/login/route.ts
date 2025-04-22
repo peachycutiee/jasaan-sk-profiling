@@ -26,6 +26,10 @@ export async function POST(request: Request) {
     console.log("Received captchaToken:", captchaToken); // Debugging: Log received token
 
     // Step 1: Verify hCaptcha token
+    if (!captchaToken) {
+      return NextResponse.json({ error: "Missing captcha token." }, { status: 400 });
+    }
+
     const captchaResponse = await axios.post(
       "https://hcaptcha.com/siteverify",
       null,
