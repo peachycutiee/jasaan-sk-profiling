@@ -9,6 +9,12 @@ const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const HCAPTCHA_SECRET_KEY = process.env.HCAPTCHA_SECRET_KEY!;
 const NEXT_JWT_SECRET_KEY = process.env.NEXT_JWT_SECRET_KEY!;
 
+// Debugging: Log environment variables
+console.log("SUPABASE_URL:", SUPABASE_URL);
+console.log("SUPABASE_ANON_KEY:", SUPABASE_ANON_KEY);
+console.log("HCAPTCHA_SECRET_KEY:", HCAPTCHA_SECRET_KEY);
+console.log("NEXT_JWT_SECRET_KEY:", NEXT_JWT_SECRET_KEY);
+
 // Validate environment variables
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !HCAPTCHA_SECRET_KEY || !NEXT_JWT_SECRET_KEY) {
   console.error("🚨 Missing required environment variables.");
