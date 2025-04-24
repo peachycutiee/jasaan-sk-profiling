@@ -26,6 +26,11 @@ export async function POST(request: Request) {
     console.log("Received captchaToken:", captchaToken); // Debugging: Log received token
 
     // Step 1: Verify hCaptcha token
+    if (!HCAPTCHA_SECRET_KEY) {
+      console.error("🚨 hCaptcha secret key is missing.");
+      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+    }
+
     const captchaResponse = await axios.post(
       "https://hcaptcha.com/siteverify",
       null,
