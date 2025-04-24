@@ -4,19 +4,19 @@ import axios from "axios";
 import jwt from "jsonwebtoken";
 
 // Load environment variables
+const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY!;
+const HCAPTCHA_SECRET_KEY = process.env.HCAPTCHA_SECRET_KEY!;
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const HCAPTCHA_SECRET_KEY = process.env.HCAPTCHA_SECRET_KEY!;
-const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY!;
 
 // Debugging: Log environment variables
+console.log("JWT_SECRET_KEY:", JWT_SECRET_KEY);
+console.log("HCAPTCHA_SECRET_KEY:", HCAPTCHA_SECRET_KEY);
 console.log("SUPABASE_URL:", SUPABASE_URL);
 console.log("SUPABASE_ANON_KEY:", SUPABASE_ANON_KEY);
-console.log("HCAPTCHA_SECRET_KEY:", HCAPTCHA_SECRET_KEY);
-console.log("JWT_SECRET_KEY:", JWT_SECRET_KEY);
 
 // Validate environment variables
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !HCAPTCHA_SECRET_KEY || !JWT_SECRET_KEY) {
+if (!JWT_SECRET_KEY || !HCAPTCHA_SECRET_KEY || !SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.error("🚨 Missing required environment variables.");
   throw new Error("Missing required environment variables.");
 }
