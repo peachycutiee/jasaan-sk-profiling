@@ -7,16 +7,16 @@ import jwt from "jsonwebtoken";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const HCAPTCHA_SECRET_KEY = process.env.HCAPTCHA_SECRET_KEY!;
-const NEXT_JWT_SECRET_KEY = process.env.NEXT_JWT_SECRET_KEY!;
+const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY!;
 
 // Debugging: Log environment variables
 console.log("SUPABASE_URL:", SUPABASE_URL);
 console.log("SUPABASE_ANON_KEY:", SUPABASE_ANON_KEY);
 console.log("HCAPTCHA_SECRET_KEY:", HCAPTCHA_SECRET_KEY);
-console.log("NEXT_JWT_SECRET_KEY:", NEXT_JWT_SECRET_KEY);
+console.log("JWT_SECRET_KEY:", JWT_SECRET_KEY);
 
 // Validate environment variables
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !HCAPTCHA_SECRET_KEY || !NEXT_JWT_SECRET_KEY) {
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !HCAPTCHA_SECRET_KEY || !JWT_SECRET_KEY) {
   console.error("🚨 Missing required environment variables.");
   throw new Error("Missing required environment variables.");
 }
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     }
 
     // Step 3: Generate JWT (optional, for session management)
-    const token = jwt.sign({ userId: data.user?.id }, NEXT_JWT_SECRET_KEY, {
+    const token = jwt.sign({ userId: data.user?.id }, JWT_SECRET_KEY, {
       expiresIn: "1h", // Token expires in 1 hour
     });
 
