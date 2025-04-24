@@ -9,6 +9,12 @@ const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const HCAPTCHA_SECRET_KEY = process.env.HCAPTCHA_SECRET_KEY!;
 const NEXT_JWT_SECRET_KEY = process.env.NEXT_JWT_SECRET_KEY!;
 
+// Validate environment variables
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !HCAPTCHA_SECRET_KEY || !NEXT_JWT_SECRET_KEY) {
+  console.error("🚨 Missing required environment variables.");
+  throw new Error("Missing required environment variables.");
+}
+
 // Initialize Supabase client
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -26,9 +32,8 @@ export async function POST(request: Request) {
     console.log("Received captchaToken:", captchaToken); // Debugging: Log received token
 
     // Step 1: Verify hCaptcha token
-    if (!HCAPTCHA_SECRET_KEY) {
-      console.error("🚨 hCaptcha secret key is missing.");
-      return NextResponse.json({ error: "Internal server error." }, { status: 500 });
+    if (!captchaToken) {
+      return NextResponse.json({ error: "Missing hCaptcha token." }, { status: 400 });
     }
 
     const captchaResponse = await axios.post(
@@ -52,6 +57,9 @@ export async function POST(request: Request) {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
+      options: {
+        captchaToken, // Include the hCaptcha token here
+      },
     });
 
     if (error) {

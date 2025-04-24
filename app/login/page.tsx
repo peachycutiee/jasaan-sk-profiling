@@ -121,6 +121,7 @@ const LoginPage = () => {
                 onVerify={(token: string) => setCaptchaToken(token)}
                 onExpire={() => setCaptchaToken("")}
                 onError={() => setCaptchaToken("")}
+                ariaHidden={true} // Suppress accessibility warnings
               />
             )}
           </div>
