@@ -50,7 +50,7 @@ const LoginPage = () => {
 
       if (!response.ok) {
         captchaRef.current?.resetCaptcha(); // Reset hCaptcha widget
-        setCaptchaToken(""); // Reset captchaToken state
+        setCaptchaToken(""); // Clear the captchaToken state
         throw new Error(data.error || "Login failed.");
       }
 

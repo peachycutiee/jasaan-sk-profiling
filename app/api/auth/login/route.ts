@@ -75,7 +75,13 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error("❌ Supabase auth error:", error.message);
-      return NextResponse.json({ error: error.message }, { status: 401 });
+
+      // Handle reused token error
+      if (error.message.includes("already-seen-response")) {
+        return NextResponse.json({ error: "This captcha token has already been used. Please solve the captcha again." }, { status: 400 });
+      }
+
+      return NextResponse.json({ error: error.message || "Authentication failed." }, { status: 401 });
     }
 
     // Step 3: Generate JWT (optional, for session management)
