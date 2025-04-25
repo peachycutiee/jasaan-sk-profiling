@@ -1,26 +1,30 @@
-"use client";
+"use client"; // Mark this file as a client component
 
-import { useEffect, useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
-import Image from "next/image"; // Import Image from next/image
-import Link from "next/link"; // Import Link from next/link
-import { SupabaseClient } from "@supabase/supabase-js"; // Import SupabaseClient from @supabase/supabase-js
+import Image from "next/image";
+import Link from "next/link";
+import { SupabaseClient } from "@supabase/supabase-js";
+
+interface HCaptchaInstance {
+  resetCaptcha: () => void;
+}
 
 export default function Signup() {
-  const router = useRouter(); // Always call useRouter unconditionally
+  const router = useRouter();
 
   // Retrieve Supabase credentials from environment variables
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  let supabase: SupabaseClient | null = null; // Use the correct type
+  let supabase: SupabaseClient | null = null;
 
   if (supabaseUrl && supabaseAnonKey) {
-    supabase = createBrowserClient(supabaseUrl, supabaseAnonKey); // Pass SUPABASE_URL and SUPABASE_ANON_KEY
+    supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
   } else {
-    console.error("Supabase credentials are missing. Please check your environment variables.");
+    console.error("🚨 Supabase credentials are missing. Please check your environment variables.");
   }
 
   const [form, setForm] = useState({ fullName: "", email: "", password: "" });
@@ -29,13 +33,7 @@ export default function Signup() {
   const [isLoading, setIsLoading] = useState(false); // Loading state
   const [showPassword, setShowPassword] = useState(false); // Password visibility toggle
 
-  useEffect(() => {
-    if (!supabase) {
-      return;
-    }
-
-    // Add any logic that depends on supabase here
-  }, [supabase]);
+  const captchaRef = useRef<HCaptchaInstance | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -51,7 +49,6 @@ export default function Signup() {
     setError("");
     setIsLoading(true);
 
-    // Validate captcha
     if (!captchaToken) {
       setError("Please complete the hCaptcha verification.");
       setIsLoading(false);
@@ -59,7 +56,12 @@ export default function Signup() {
     }
 
     try {
-      // Sign up the user
+      console.log("🔒 Sending captchaToken:", captchaToken); // Debugging: Log the captchaToken
+
+      // Clear the captchaToken immediately after submission
+      setCaptchaToken(""); // Clear the token
+
+      // Sign up the user with Supabase
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
@@ -74,14 +76,15 @@ export default function Signup() {
         throw signUpError;
       }
 
-      console.log("User signed up:", data.user);
-      router.push("/dashboard"); // Redirect after successful signup
+      console.log("🔒 User signed up:", data.user);
+      router.push("/dashboard"); // Redirect to dashboard on success
     } catch (err: unknown) {
       if (err instanceof Error) {
-        setError(err.message); // Display error to the user
+        setError(err.message);
       } else {
         setError("An unknown error occurred.");
       }
+      captchaRef.current?.resetCaptcha(); // Reset hCaptcha widget on error
     } finally {
       setIsLoading(false);
     }
@@ -149,8 +152,11 @@ export default function Signup() {
           {/* hCaptcha Widget */}
           <div className="mb-4 flex justify-center">
             <HCaptcha
+              ref={(el: HCaptchaInstance | null) => (captchaRef.current = el)} // Attach reference to hCaptcha instance
               sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY as string}
-              onVerify={setCaptchaToken} // Save hCaptcha token
+              onVerify={(token: string) => setCaptchaToken(token)}
+              onExpire={() => setCaptchaToken("")}
+              onError={() => setCaptchaToken("")}
             />
           </div>
 

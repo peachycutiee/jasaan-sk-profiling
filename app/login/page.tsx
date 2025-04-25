@@ -38,19 +38,23 @@ const LoginPage = () => {
     setError("");
 
     try {
-      console.log("Sending captchaToken:", captchaToken); // Debugging: Log the captchaToken
+      console.log("🔒 Sending captchaToken:", captchaToken); // Debugging: Log the captchaToken
+
+      // Clear the captchaToken immediately after submission
+      const currentCaptchaToken = captchaToken;
+      setCaptchaToken("");
+
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, captchaToken }),
+        body: JSON.stringify({ email, password, captchaToken: currentCaptchaToken }),
       });
 
       const data = await response.json();
-      console.log("Server response:", data); // Debugging: Log server response
+      console.log("🔒 Server response:", data); // Debugging: Log server response
 
       if (!response.ok) {
         captchaRef.current?.resetCaptcha(); // Reset hCaptcha widget
-        setCaptchaToken(""); // Clear the captchaToken state
         throw new Error(data.error || "Login failed.");
       }
 
@@ -66,6 +70,7 @@ const LoginPage = () => {
       } else {
         setError("An unknown error occurred.");
       }
+      captchaRef.current?.resetCaptcha(); // Reset hCaptcha widget on error
     } finally {
       setIsLoading(false);
     }
