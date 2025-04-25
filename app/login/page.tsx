@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -49,8 +47,8 @@ const LoginPage = () => {
       console.log("Server response:", data); // Debugging: Log server response
 
       if (!response.ok) {
-        captchaRef.current?.resetCaptcha();
-        setCaptchaToken("");
+        captchaRef.current?.resetCaptcha(); // Reset hCaptcha widget
+        setCaptchaToken(""); // Reset captchaToken state
         throw new Error(data.error || "Login failed.");
       }
 
@@ -121,7 +119,6 @@ const LoginPage = () => {
                 onVerify={(token: string) => setCaptchaToken(token)}
                 onExpire={() => setCaptchaToken("")}
                 onError={() => setCaptchaToken("")}
-                ariaHidden={true} // Suppress accessibility warnings
               />
             )}
           </div>

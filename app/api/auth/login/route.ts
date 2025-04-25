@@ -9,15 +9,16 @@ const HCAPTCHA_SECRET_KEY = process.env.HCAPTCHA_SECRET_KEY!;
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-// Debug: Log environment vars
-console.log("🛠️ JWT_SECRET_KEY:", JWT_SECRET_KEY ? "✅" : "❌ MISSING");
-console.log("🛠️ HCAPTCHA_SECRET_KEY:", HCAPTCHA_SECRET_KEY ? "✅" : "❌ MISSING");
-console.log("🛠️ SUPABASE_URL:", SUPABASE_URL ? "✅" : "❌ MISSING");
-console.log("🛠️ SUPABASE_ANON_KEY:", SUPABASE_ANON_KEY ? "✅" : "❌ MISSING");
+// Debugging: Log environment variables
+console.log("JWT_SECRET_KEY:", JWT_SECRET_KEY ? "✅" : "❌ MISSING");
+console.log("HCAPTCHA_SECRET_KEY:", HCAPTCHA_SECRET_KEY ? "✅" : "❌ MISSING");
+console.log("SUPABASE_URL:", SUPABASE_URL ? "✅" : "❌ MISSING");
+console.log("SUPABASE_ANON_KEY:", SUPABASE_ANON_KEY ? "✅" : "❌ MISSING");
 
-// Validate required env variables
+// Validate required environment variables
 if (!JWT_SECRET_KEY || !HCAPTCHA_SECRET_KEY || !SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  throw new Error("🚨 Missing one or more required environment variables.");
+  console.error("🚨 Missing one or more required environment variables.");
+  throw new Error("Missing required environment variables.");
 }
 
 // Initialize Supabase client
@@ -31,16 +32,16 @@ type LoginRequestBody = {
 
 export async function POST(request: Request) {
   try {
-    // Parse request
+    // Parse the request body
     const { email, password, captchaToken } = (await request.json()) as LoginRequestBody;
 
     console.log("🧠 Received captchaToken:", captchaToken);
 
+    // Step 1: Verify hCaptcha token
     if (!captchaToken) {
       return NextResponse.json({ error: "Missing hCaptcha token." }, { status: 400 });
     }
 
-    // ✅ Step 1: Verify hCaptcha using correct format
     const params = new URLSearchParams();
     params.append("secret", HCAPTCHA_SECRET_KEY);
     params.append("response", captchaToken);
@@ -53,7 +54,7 @@ export async function POST(request: Request) {
       }
     );
 
-    console.log("🔒 hCaptcha response:", captchaResponse.data);
+    console.log("🔒 hCaptcha verification response:", captchaResponse.data);
 
     if (!captchaResponse.data.success) {
       return NextResponse.json({
@@ -62,7 +63,7 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // ✅ Step 2: Sign in with Supabase
+    // Step 2: Authenticate user with Supabase
     console.log("🔒 Sending captchaToken to Supabase:", captchaToken); // Debugging log
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -73,18 +74,18 @@ export async function POST(request: Request) {
     });
 
     if (error) {
-      console.error("❌ Supabase error:", error.message);
+      console.error("❌ Supabase auth error:", error.message);
       return NextResponse.json({ error: error.message }, { status: 401 });
     }
 
-    // ✅ Step 3: Generate JWT
+    // Step 3: Generate JWT (optional, for session management)
     const token = jwt.sign({ userId: data.user?.id }, JWT_SECRET_KEY, {
-      expiresIn: "1h",
+      expiresIn: "1h", // Token expires in 1 hour
     });
 
-    console.log("🔑 JWT token:", token);
+    console.log("🔑 Generated JWT token:", token);
 
-    // ✅ Step 4: Return user + token
+    // Step 4: Return user data and token
     return NextResponse.json({
       user: {
         id: data.user?.id,
