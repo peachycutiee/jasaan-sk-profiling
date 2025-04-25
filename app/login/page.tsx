@@ -1,3 +1,5 @@
+"use client"; // Mark this file as a client component
+
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
