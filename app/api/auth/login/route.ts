@@ -63,9 +63,13 @@ export async function POST(request: Request) {
     }
 
     // ✅ Step 2: Sign in with Supabase
+    console.log("🔒 Sending captchaToken to Supabase:", captchaToken); // Debugging log
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
+      options: {
+        captchaToken, // Include the hCaptcha token here
+      },
     });
 
     if (error) {
