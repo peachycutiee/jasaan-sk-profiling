@@ -39,7 +39,7 @@ const LoginPage = () => {
     setError("");
 
     try {
-      console.log("🔒 Sending captchaToken:", captchaToken); // Debugging: Log the captchaToken
+      console.log("Sending captchaToken:", captchaToken); // Debugging: Log the captchaToken
 
       // Clear the captchaToken immediately after submission
       const currentCaptchaToken = captchaToken;
@@ -52,7 +52,7 @@ const LoginPage = () => {
       });
 
       const data = await response.json();
-      console.log("🔒 Server response:", data); // Debugging: Log server response
+      console.log("Server response:", data); // Debugging: Log server response
 
       if (!response.ok) {
         captchaRef.current?.resetCaptcha(); // Reset hCaptcha widget
@@ -118,15 +118,15 @@ const LoginPage = () => {
             </button>
           </div>
 
-          {/* hCaptcha Widget */}
+          {/* hCaptcha */}
           <div className="mb-4 flex justify-center">
             {siteKey && (
               <HCaptcha
-                ref={(el: HCaptchaInstance | null) => (captchaRef.current = el)} // Attach reference to hCaptcha instance
+                ref={(el: HCaptchaInstance | null) => (captchaRef.current = el)}
                 sitekey={siteKey}
-                onVerify={(token: string) => setCaptchaToken(token)} // Update captchaToken state
-                onExpire={() => setCaptchaToken("")} // Clear token on expiration
-                onError={() => setCaptchaToken("")} // Clear token on error
+                onVerify={(token: string) => setCaptchaToken(token)}
+                onExpire={() => setCaptchaToken("")}
+                onError={() => setCaptchaToken("")}
               />
             )}
           </div>
@@ -136,8 +136,8 @@ const LoginPage = () => {
 
           <button
             type="submit"
-            disabled={isLoading}
             className="w-full bg-red-600 text-white py-3 rounded-full mt-4 text-lg font-bold disabled:bg-gray-400"
+            disabled={isLoading}
           >
             {isLoading ? "Logging in..." : "Login"}
           </button>
@@ -145,10 +145,7 @@ const LoginPage = () => {
           <div className="mt-4 flex justify-center w-full">
             <Link href="/signup">
               <span className="text-black">
-                Don&apos;t have an account?{" "}
-                <span className="text-red-600 font-bold cursor-pointer">
-                  Sign Up
-                </span>
+                Don&apos;t have an account? <span className="text-red-600 font-bold cursor-pointer">Sign Up</span>
               </span>
             </Link>
           </div>

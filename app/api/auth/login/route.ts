@@ -2,21 +2,23 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import axios from "axios";
 import jwt from "jsonwebtoken";
+import fs from "fs";
 
 // Load environment variables
-const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY!;
 const HCAPTCHA_SECRET_KEY = process.env.HCAPTCHA_SECRET_KEY!;
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
+// Load private key for JWT signing (use asymmetric algorithm)
+const PRIVATE_KEY = fs.readFileSync("private.key", "utf-8"); // Path to your private key file
+
 // Debugging: Log environment variables
-console.log("JWT_SECRET_KEY:", JWT_SECRET_KEY ? "✅" : "❌ MISSING");
 console.log("HCAPTCHA_SECRET_KEY:", HCAPTCHA_SECRET_KEY ? "✅" : "❌ MISSING");
 console.log("SUPABASE_URL:", SUPABASE_URL ? "✅" : "❌ MISSING");
 console.log("SUPABASE_ANON_KEY:", SUPABASE_ANON_KEY ? "✅" : "❌ MISSING");
 
 // Validate required environment variables
-if (!JWT_SECRET_KEY || !HCAPTCHA_SECRET_KEY || !SUPABASE_URL || !SUPABASE_ANON_KEY) {
+if (!HCAPTCHA_SECRET_KEY || !SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.error("🚨 Missing one or more required environment variables.");
   throw new Error("Missing required environment variables.");
 }
@@ -87,10 +89,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message || "Authentication failed." }, { status: 401 });
     }
 
-    // Step 3: Generate JWT (optional, for session management)
-    const token = jwt.sign({ userId: data.user?.id }, JWT_SECRET_KEY, {
-      expiresIn: "1h", // Token expires in 1 hour
-    });
+    // Step 3: Generate JWT with dynamic payload and RS256 algorithm
+    const payload = {
+      userId: data.user?.id,
+      email: data.user?.email,
+      role: data.user?.role,
+      iat: Math.floor(Date.now() / 1000), // Issued at (current timestamp)
+      exp: Math.floor(Date.now() / 1000) + 3600, // Expires in 1 hour
+      jti: crypto.randomUUID(), // Unique identifier for the token
+    };
+
+    const token = jwt.sign(payload, PRIVATE_KEY, { algorithm: "RS256" });
 
     console.log("🔑 Generated JWT token:", token);
 
