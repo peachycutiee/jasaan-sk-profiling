@@ -11,15 +11,16 @@ interface HCaptchaInstance {
 }
 
 const LoginPage = () => {
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaToken, setCaptchaToken] = useState(""); // Store hCaptcha token
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Loading state
+  const [showPassword, setShowPassword] = useState(false); // Password visibility toggle
 
   const captchaRef = useRef<HCaptchaInstance | null>(null);
-  const router = useRouter();
   const siteKey = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY;
 
   if (!siteKey) {
@@ -38,7 +39,7 @@ const LoginPage = () => {
     setError("");
 
     try {
-      console.log("🔒 Sending captchaToken:", captchaToken); // Debugging: Log the captchaToken
+      console.log("Sending captchaToken:", captchaToken); // Debugging: Log the captchaToken
 
       // Clear the captchaToken immediately after submission
       const currentCaptchaToken = captchaToken;
@@ -51,7 +52,7 @@ const LoginPage = () => {
       });
 
       const data = await response.json();
-      console.log("🔒 Server response:", data); // Debugging: Log server response
+      console.log("Server response:", data); // Debugging: Log server response
 
       if (!response.ok) {
         captchaRef.current?.resetCaptcha(); // Reset hCaptcha widget
@@ -60,7 +61,7 @@ const LoginPage = () => {
 
       if (data.user) {
         localStorage.setItem("token", data.token);
-        router.push("/dashboard");
+        router.push("/dashboard"); // Redirect to dashboard on success
       } else {
         throw new Error("No user data returned.");
       }
@@ -106,7 +107,7 @@ const LoginPage = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full p-3 border rounded-full mb-2 pr-10"
+              className="w-full p-3 border rounded-full mb-4 pr-10"
             />
             <button
               type="button"
@@ -117,11 +118,11 @@ const LoginPage = () => {
             </button>
           </div>
 
-          {/* hCaptcha */}
+          {/* hCaptcha Widget */}
           <div className="mb-4 flex justify-center">
             {siteKey && (
               <HCaptcha
-                ref={(el: HCaptchaInstance | null) => (captchaRef.current = el)}
+                ref={(el: HCaptchaInstance | null) => (captchaRef.current = el)} // Attach reference to hCaptcha instance
                 sitekey={siteKey}
                 onVerify={(token: string) => setCaptchaToken(token)}
                 onExpire={() => setCaptchaToken("")}
@@ -130,22 +131,25 @@ const LoginPage = () => {
             )}
           </div>
 
-          <p className="text-right text-sm text-red-500 cursor-pointer">Forgot Password?</p>
+          {/* Display Error Message */}
+          {error && <p className="text-red-500 text-center">{error}</p>}
 
           <button
             type="submit"
-            className="w-full bg-red-600 text-white py-3 rounded-full mt-4 text-lg font-bold disabled:bg-gray-400"
+            onClick={handleLogin}
             disabled={isLoading}
+            className="w-full bg-red-600 text-white py-3 rounded-full mt-4 text-lg font-bold disabled:bg-gray-400"
           >
             {isLoading ? "Logging in..." : "Login"}
           </button>
 
-          {error && <p className="text-red-500 text-center mt-2">{error}</p>}
-
           <div className="mt-4 flex justify-center w-full">
             <Link href="/signup">
               <span className="text-black">
-                Don&apos;t have an account? <span className="text-red-600 font-bold cursor-pointer">Sign Up</span>
+                Don&apos;t have an account?{" "}
+                <span className="text-red-600 font-bold cursor-pointer">
+                  Sign Up
+                </span>
               </span>
             </Link>
           </div>
