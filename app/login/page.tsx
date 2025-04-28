@@ -1,14 +1,10 @@
 "use client"; // Mark this file as a client component
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import HCaptcha from "@hcaptcha/react-hcaptcha";
-
-interface HCaptchaInstance {
-  resetCaptcha: () => void;
-}
+import HCaptchaComponent from "../components/hcaptcha-component";
 
 const LoginPage = () => {
   const router = useRouter();
@@ -19,13 +15,6 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false); // Loading state
   const [showPassword, setShowPassword] = useState(false); // Password visibility toggle
-
-  const captchaRef = useRef<HCaptchaInstance | null>(null);
-  const siteKey = process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY;
-
-  if (!siteKey) {
-    console.error("🚨 hCaptcha site key is missing.");
-  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +44,6 @@ const LoginPage = () => {
       console.log("Server response:", data); // Debugging: Log server response
 
       if (!response.ok) {
-        captchaRef.current?.resetCaptcha(); // Reset hCaptcha widget
         throw new Error(data.error || "Login failed.");
       }
 
@@ -71,7 +59,6 @@ const LoginPage = () => {
       } else {
         setError("An unknown error occurred.");
       }
-      captchaRef.current?.resetCaptcha(); // Reset hCaptcha widget on error
     } finally {
       setIsLoading(false);
     }
@@ -120,15 +107,9 @@ const LoginPage = () => {
 
           {/* hCaptcha */}
           <div className="mb-4 flex justify-center">
-            {siteKey && (
-              <HCaptcha
-                ref={(el: HCaptchaInstance | null) => (captchaRef.current = el)}
-                sitekey={siteKey}
-                onVerify={(token: string) => setCaptchaToken(token)}
-                onExpire={() => setCaptchaToken("")}
-                onError={() => setCaptchaToken("")}
-              />
-            )}
+            <HCaptchaComponent
+              onVerify={(token: string) => setCaptchaToken(token)} // Pass the token to parent
+            />
           </div>
 
           {/* Display Error Message */}

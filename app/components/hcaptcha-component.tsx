@@ -1,9 +1,11 @@
-"use client"; // Add this line
-
 import { useState, useEffect } from "react";
 import HCaptcha from "@hcaptcha/react-hcaptcha";
 
-const HCaptchaComponent = () => {
+interface HCaptchaComponentProps {
+  onVerify?: (token: string) => void; // Optional prop for handling verification
+}
+
+const HCaptchaComponent = ({ onVerify }: HCaptchaComponentProps) => {
   const [siteKey, setSiteKey] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
@@ -32,7 +34,11 @@ const HCaptchaComponent = () => {
       ) : siteKey ? (
         <HCaptcha
           sitekey={siteKey}
-          onVerify={(token: string) => console.log("Captcha token:", token)}
+          onVerify={(token: string) => {
+            if (onVerify) {
+              onVerify(token); // Pass the token to the parent component
+            }
+          }}
         />
       ) : (
         <p>Loading hCaptcha...</p>
