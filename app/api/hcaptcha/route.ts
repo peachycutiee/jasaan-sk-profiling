@@ -36,6 +36,6 @@ export async function POST(req: Request) {
     return NextResponse.json(data);
   } catch (error) {
     console.error("Error verifying hCaptcha:", error);
-        return NextResponse.json({ success: false, error: "An unexpected error occurred" });
-      }
-    }
+    return NextResponse.json({ success: false, error: "An unexpected error occurred" });
+  }
+}
