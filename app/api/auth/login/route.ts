@@ -2,23 +2,21 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import axios from "axios";
 import jwt from "jsonwebtoken";
-import fs from "fs";
 
 // Load environment variables
 const HCAPTCHA_SECRET_KEY = process.env.HCAPTCHA_SECRET_KEY!;
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-// Load private key for JWT signing (use asymmetric algorithm)
-const PRIVATE_KEY = fs.readFileSync("private.key", "utf-8"); // Path to your private key file
+const PRIVATE_KEY = process.env.PRIVATE_KEY!; // Load private key from environment variable
 
 // Debugging: Log environment variables
 console.log("HCAPTCHA_SECRET_KEY:", HCAPTCHA_SECRET_KEY ? "✅" : "❌ MISSING");
 console.log("SUPABASE_URL:", SUPABASE_URL ? "✅" : "❌ MISSING");
 console.log("SUPABASE_ANON_KEY:", SUPABASE_ANON_KEY ? "✅" : "❌ MISSING");
+console.log("PRIVATE_KEY:", PRIVATE_KEY ? "✅" : "❌ MISSING");
 
 // Validate required environment variables
-if (!HCAPTCHA_SECRET_KEY || !SUPABASE_URL || !SUPABASE_ANON_KEY) {
+if (!HCAPTCHA_SECRET_KEY || !SUPABASE_URL || !SUPABASE_ANON_KEY || !PRIVATE_KEY) {
   console.error("🚨 Missing one or more required environment variables.");
   throw new Error("Missing required environment variables.");
 }
