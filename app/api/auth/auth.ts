@@ -5,12 +5,12 @@ export const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-// Function to sign in with email/password + hCaptcha
-export const signIn = async (email: string, password: string, captchaToken: string) => {
+// Function to sign in with email/password (no captcha)
+export const signIn = async (email: string, password: string) => {
   const res = await fetch("/api/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password, captchaToken }),
+    body: JSON.stringify({ email, password }), // Removed captchaToken
   });
 
   const data = await res.json();
