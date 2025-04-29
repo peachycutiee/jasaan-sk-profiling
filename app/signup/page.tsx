@@ -1,16 +1,11 @@
 "use client"; // Mark this file as a client component
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
-import HCaptcha from "@hcaptcha/react-hcaptcha";
 import Image from "next/image";
 import Link from "next/link";
 import { SupabaseClient } from "@supabase/supabase-js";
-
-interface HCaptchaInstance {
-  resetCaptcha: () => void;
-}
 
 export default function Signup() {
   const router = useRouter();
@@ -28,12 +23,9 @@ export default function Signup() {
   }
 
   const [form, setForm] = useState({ fullName: "", email: "", password: "" });
-  const [captchaToken, setCaptchaToken] = useState(""); // Store hCaptcha token
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false); // Loading state
-  const [showPassword, setShowPassword] = useState(false); // Password visibility toggle
-
-  const captchaRef = useRef<HCaptchaInstance | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -49,25 +41,14 @@ export default function Signup() {
     setError("");
     setIsLoading(true);
 
-    if (!captchaToken) {
-      setError("Please complete the hCaptcha verification.");
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      console.log("🔒 Sending captchaToken:", captchaToken); // Debugging: Log the captchaToken
-
-      // Clear the captchaToken immediately after submission
-      setCaptchaToken(""); // Clear the token
-
       // Sign up the user with Supabase
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
         options: {
           data: {
-            full_name: form.fullName, // Optional: Store additional user data
+            full_name: form.fullName,
           },
         },
       });
@@ -77,14 +58,13 @@ export default function Signup() {
       }
 
       console.log("🔒 User signed up:", data.user);
-      router.push("/dashboard"); // Redirect to dashboard on success
+      router.push("/dashboard");
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
         setError("An unknown error occurred.");
       }
-      captchaRef.current?.resetCaptcha(); // Reset hCaptcha widget on error
     } finally {
       setIsLoading(false);
     }
@@ -147,17 +127,6 @@ export default function Signup() {
             >
               {showPassword ? "Hide" : "Show"}
             </button>
-          </div>
-
-          {/* hCaptcha Widget */}
-          <div className="mb-4 flex justify-center">
-            <HCaptcha
-              ref={(el: HCaptchaInstance | null) => (captchaRef.current = el)} // Attach reference to hCaptcha instance
-              sitekey={process.env.NEXT_PUBLIC_HCAPTCHA_SITE_KEY as string}
-              onVerify={(token: string) => setCaptchaToken(token)}
-              onExpire={() => setCaptchaToken("")}
-              onError={() => setCaptchaToken("")}
-            />
           </div>
 
           {/* Display Error Message */}
