@@ -45,7 +45,9 @@ const LoginPage = () => {
 
     try {
       const currentCaptchaToken = captchaToken;
-      setCaptchaToken(""); // Clear token early to avoid reuse
+
+      // Clear token early to avoid reuse
+      setCaptchaToken(""); 
 
       const response = await fetch("/api/auth/login", {
         method: "POST",

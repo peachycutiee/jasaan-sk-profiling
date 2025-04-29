@@ -5,8 +5,8 @@ import HCaptcha from "@hcaptcha/react-hcaptcha";
 
 interface HCaptchaComponentProps {
   onVerify?: (token: string) => void;
-  onExpire?: () => void; // NEW
-  onError?: () => void; // NEW
+  onExpire?: () => void; 
+  onError?: () => void; 
 }
 
 const HCaptchaComponent = forwardRef<HTMLDivElement, HCaptchaComponentProps>((props, ref) => {
