@@ -38,7 +38,7 @@ const LoginPage = () => {
 
       // Clear the captchaToken immediately after submission
       const currentCaptchaToken = captchaToken;
-      setCaptchaToken("");
+      setCaptchaToken(""); // Reset the captchaToken state
 
       const response = await fetch("/api/auth/login", {
         method: "POST",
