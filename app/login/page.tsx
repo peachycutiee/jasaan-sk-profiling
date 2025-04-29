@@ -13,22 +13,21 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [captchaToken, setCaptchaToken] = useState("");
   const [error, setError] = useState("");
-  const [captchaWarning, setCaptchaWarning] = useState(""); // 🛠 New: Captcha expired message
-  const [captchaRefreshing, setCaptchaRefreshing] = useState(false); // 🛠 New: Loading spinner
+  const [captchaWarning, setCaptchaWarning] = useState(""); // Warning if captcha expired
+  const [captchaRefreshing, setCaptchaRefreshing] = useState(false); // Spinner while refreshing captcha
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [captchaKey, setCaptchaKey] = useState(0); // Used to reset captcha widget
 
   const resetCaptcha = () => {
-    setCaptchaToken("");
-    setCaptchaWarning(""); // Clear warning too
+    setCaptchaToken(""); // Clear captcha token
+    setCaptchaWarning(""); // Clear captcha warning
     setCaptchaRefreshing(true); // Start spinner
-    setCaptchaKey((prevKey) => prevKey + 1);
+    setCaptchaKey((prevKey) => prevKey + 1); // Force HCaptchaComponent to remount
 
-    // Hide spinner after a short delay (simulate captcha re-rendering time)
     setTimeout(() => {
-      setCaptchaRefreshing(false);
-    }, 1000); // 1 second
+      setCaptchaRefreshing(false); // Hide spinner after a short delay
+    }, 1000);
   };
 
   const shouldShowCaptcha = email.trim() !== "" && password.trim() !== "";
@@ -46,7 +45,7 @@ const LoginPage = () => {
 
     try {
       const currentCaptchaToken = captchaToken;
-      setCaptchaToken("");
+      setCaptchaToken(""); // Clear token early to avoid reuse
 
       const response = await fetch("/api/auth/login", {
         method: "POST",
@@ -75,7 +74,7 @@ const LoginPage = () => {
       }
     } finally {
       setIsLoading(false);
-      resetCaptcha(); // ✅ Always reset captcha after attempt
+      resetCaptcha(); // ✅ Always reset captcha after every attempt
     }
   };
 
@@ -127,7 +126,7 @@ const LoginPage = () => {
             </button>
           </div>
 
-          {/* Captcha */}
+          {/* hCaptcha */}
           {shouldShowCaptcha && (
             <div className="mb-4 flex flex-col items-center justify-center">
               {captchaRefreshing ? (
@@ -140,36 +139,44 @@ const LoginPage = () => {
                   key={captchaKey}
                   onVerify={(token: string) => {
                     setCaptchaToken(token);
-                    setCaptchaWarning(""); // Clear warning on success
+                    setCaptchaWarning(""); // Clear warning after fresh solve
                   }}
                   onExpire={() => {
-                    setCaptchaWarning("Captcha expired. Please try again.");
+                    setCaptchaWarning("Captcha expired. Please solve it again.");
                     resetCaptcha();
                   }}
                   onError={() => {
-                    setCaptchaWarning("Captcha error occurred. Please try again.");
+                    setCaptchaWarning("Captcha error. Please try again.");
                     resetCaptcha();
                   }}
                 />
               )}
 
-              {/* Warning if captcha expired or error */}
+              {/* Captcha Warning Message */}
               {captchaWarning && (
                 <p className="text-red-500 text-sm mt-2">{captchaWarning}</p>
               )}
             </div>
           )}
 
-          {/* Display general error */}
+          {/* General Error */}
           {error && <p className="text-red-500 text-center">{error}</p>}
 
+          {/* Login Button */}
           <button
             type="submit"
             className="w-full bg-red-600 text-white py-3 rounded-full mt-4 text-lg font-bold disabled:bg-gray-400"
-            disabled={isLoading || !captchaToken}
+            disabled={isLoading || !captchaToken} // ❗ Cannot click until captchaToken is ready
           >
             {isLoading ? "Logging in..." : "Login"}
           </button>
+
+          {/* Message if no captcha solved yet */}
+          {!captchaToken && shouldShowCaptcha && (
+            <p className="text-sm text-gray-500 text-center mt-2">
+              Please complete the captcha to enable login.
+            </p>
+          )}
 
           <div className="mt-4 flex justify-center w-full">
             <Link href="/signup">
