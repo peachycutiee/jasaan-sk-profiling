@@ -1,6 +1,6 @@
-"use client"; // Mark this file as a client component
+"use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -11,16 +11,27 @@ const LoginPage = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [captchaToken, setCaptchaToken] = useState(""); // Store hCaptcha token
+  const [captchaToken, setCaptchaToken] = useState("");
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false); // Loading state
-  const [showPassword, setShowPassword] = useState(false); // Password visibility toggle
-  const captchaRef = useRef<HTMLDivElement | null>(null); // Ref for managing hCaptcha widget
-  const [captchaKey, setCaptchaKey] = useState(0); // Key to force re-rendering
+  const [captchaWarning, setCaptchaWarning] = useState(""); // 🛠 New: Captcha expired message
+  const [captchaRefreshing, setCaptchaRefreshing] = useState(false); // 🛠 New: Loading spinner
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [captchaKey, setCaptchaKey] = useState(0); // Used to reset captcha widget
 
   const resetCaptcha = () => {
-    setCaptchaKey((prevKey) => prevKey + 1); // Increment the key to reset the widget
+    setCaptchaToken("");
+    setCaptchaWarning(""); // Clear warning too
+    setCaptchaRefreshing(true); // Start spinner
+    setCaptchaKey((prevKey) => prevKey + 1);
+
+    // Hide spinner after a short delay (simulate captcha re-rendering time)
+    setTimeout(() => {
+      setCaptchaRefreshing(false);
+    }, 1000); // 1 second
   };
+
+  const shouldShowCaptcha = email.trim() !== "" && password.trim() !== "";
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,11 +45,8 @@ const LoginPage = () => {
     setError("");
 
     try {
-      console.log("Sending captchaToken:", captchaToken); // Debugging: Log the captchaToken
-
-      // Clear the captchaToken immediately after submission
       const currentCaptchaToken = captchaToken;
-      setCaptchaToken(""); // Reset the captchaToken state
+      setCaptchaToken("");
 
       const response = await fetch("/api/auth/login", {
         method: "POST",
@@ -47,21 +55,19 @@ const LoginPage = () => {
       });
 
       const data = await response.json();
-      console.log("Server response:", data); // Debugging: Log server response
+      console.log("Server response:", data);
 
       if (!response.ok) {
-        resetCaptcha(); // Reset hCaptcha widget
         throw new Error(data.error || "Login failed.");
       }
 
       if (data.user) {
         localStorage.setItem("token", data.token);
-        router.push("/dashboard"); // Redirect to dashboard on success
+        router.push("/dashboard");
       } else {
         throw new Error("No user data returned.");
       }
     } catch (err: unknown) {
-      resetCaptcha(); // Reset hCaptcha widget on error
       if (err instanceof Error) {
         setError(err.message);
       } else {
@@ -69,6 +75,7 @@ const LoginPage = () => {
       }
     } finally {
       setIsLoading(false);
+      resetCaptcha(); // ✅ Always reset captcha after attempt
     }
   };
 
@@ -76,7 +83,13 @@ const LoginPage = () => {
     <div className="flex h-screen items-center justify-center">
       {/* Left - Logo */}
       <div className="w-1/2 flex justify-center items-center">
-        <Image src="/jasaan-logo.png" width={1000} height={1000} alt="Municipality of Jasaan" className="w-64" />
+        <Image
+          src="/jasaan-logo.png"
+          width={1000}
+          height={1000}
+          alt="Municipality of Jasaan"
+          className="w-64"
+        />
       </div>
 
       <div className="w-px h-3/4 bg-gray-300"></div>
@@ -95,6 +108,7 @@ const LoginPage = () => {
             required
             className="w-full p-3 border rounded-full mb-4"
           />
+
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
@@ -113,22 +127,46 @@ const LoginPage = () => {
             </button>
           </div>
 
-          {/* hCaptcha */}
-          <div className="mb-4 flex justify-center">
-            <HCaptchaComponent
-              key={captchaKey} // Force re-rendering to reset the widget
-              ref={captchaRef}
-              onVerify={(token: string) => setCaptchaToken(token)} // Pass the token to parent
-            />
-          </div>
+          {/* Captcha */}
+          {shouldShowCaptcha && (
+            <div className="mb-4 flex flex-col items-center justify-center">
+              {captchaRefreshing ? (
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="w-6 h-6 border-4 border-dashed rounded-full animate-spin border-red-600"></div>
+                  <span className="text-red-600">Refreshing captcha...</span>
+                </div>
+              ) : (
+                <HCaptchaComponent
+                  key={captchaKey}
+                  onVerify={(token: string) => {
+                    setCaptchaToken(token);
+                    setCaptchaWarning(""); // Clear warning on success
+                  }}
+                  onExpire={() => {
+                    setCaptchaWarning("Captcha expired. Please try again.");
+                    resetCaptcha();
+                  }}
+                  onError={() => {
+                    setCaptchaWarning("Captcha error occurred. Please try again.");
+                    resetCaptcha();
+                  }}
+                />
+              )}
 
-          {/* Display Error Message */}
+              {/* Warning if captcha expired or error */}
+              {captchaWarning && (
+                <p className="text-red-500 text-sm mt-2">{captchaWarning}</p>
+              )}
+            </div>
+          )}
+
+          {/* Display general error */}
           {error && <p className="text-red-500 text-center">{error}</p>}
 
           <button
             type="submit"
             className="w-full bg-red-600 text-white py-3 rounded-full mt-4 text-lg font-bold disabled:bg-gray-400"
-            disabled={isLoading}
+            disabled={isLoading || !captchaToken}
           >
             {isLoading ? "Logging in..." : "Login"}
           </button>
@@ -136,7 +174,8 @@ const LoginPage = () => {
           <div className="mt-4 flex justify-center w-full">
             <Link href="/signup">
               <span className="text-black">
-                Don&apos;t have an account? <span className="text-red-600 font-bold cursor-pointer">Sign Up</span>
+                Don&apos;t have an account?{" "}
+                <span className="text-red-600 font-bold cursor-pointer">Sign Up</span>
               </span>
             </Link>
           </div>
