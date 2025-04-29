@@ -111,7 +111,7 @@ export async function POST(request: Request) {
       token,
     });
 
-  } catch (err) {
+  } catch (err: unknown) {
     console.error("🔥 Unexpected error:", err);
     return NextResponse.json({ error: "An unexpected error occurred." }, { status: 500 });
   }

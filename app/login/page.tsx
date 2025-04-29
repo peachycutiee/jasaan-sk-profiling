@@ -1,6 +1,6 @@
 "use client"; // Mark this file as a client component
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -15,6 +15,12 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false); // Loading state
   const [showPassword, setShowPassword] = useState(false); // Password visibility toggle
+  const captchaRef = useRef<HTMLDivElement | null>(null); // Ref for managing hCaptcha widget
+  const [captchaKey, setCaptchaKey] = useState(0); // Key to force re-rendering
+
+  const resetCaptcha = () => {
+    setCaptchaKey((prevKey) => prevKey + 1); // Increment the key to reset the widget
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +50,7 @@ const LoginPage = () => {
       console.log("Server response:", data); // Debugging: Log server response
 
       if (!response.ok) {
+        resetCaptcha(); // Reset hCaptcha widget
         throw new Error(data.error || "Login failed.");
       }
 
@@ -54,6 +61,7 @@ const LoginPage = () => {
         throw new Error("No user data returned.");
       }
     } catch (err: unknown) {
+      resetCaptcha(); // Reset hCaptcha widget on error
       if (err instanceof Error) {
         setError(err.message);
       } else {
@@ -108,6 +116,8 @@ const LoginPage = () => {
           {/* hCaptcha */}
           <div className="mb-4 flex justify-center">
             <HCaptchaComponent
+              key={captchaKey} // Force re-rendering to reset the widget
+              ref={captchaRef}
               onVerify={(token: string) => setCaptchaToken(token)} // Pass the token to parent
             />
           </div>
