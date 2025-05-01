@@ -5,7 +5,13 @@ import jwt from "jsonwebtoken";
 // Load environment variables
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const PRIVATE_KEY = process.env.PRIVATE_KEY!; // Load private key from environment variable
+const PRIVATE_KEY = process.env.PRIVATE_KEY!; // Load private key for JWT signing
+
+// Validate required environment variables
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !PRIVATE_KEY) {
+  console.error("🚨 Missing one or more required environment variables.");
+  throw new Error("Missing required environment variables.");
+}
 
 // Initialize Supabase client
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -20,6 +26,8 @@ export async function POST(request: Request) {
     // Parse the request body
     const { email, password } = (await request.json()) as LoginRequestBody;
 
+    console.log("Received login request:", { email, password });
+
     // Step 1: Authenticate user with Supabase
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -27,8 +35,11 @@ export async function POST(request: Request) {
     });
 
     if (error) {
+      console.error("❌ Supabase auth error:", error.message);
       return NextResponse.json({ error: error.message || "Authentication failed." }, { status: 401 });
     }
+
+    console.log("Supabase authentication successful:", data);
 
     // Step 2: Generate JWT with dynamic payload and RS256 algorithm
     const payload = {
@@ -40,7 +51,11 @@ export async function POST(request: Request) {
       jti: crypto.randomUUID(), // Unique identifier for the token
     };
 
+    console.log("Generating JWT payload:", payload);
+
     const token = jwt.sign(payload, PRIVATE_KEY, { algorithm: "RS256" });
+
+    console.log("JWT token generated:", token);
 
     // Step 3: Return user data and token
     return NextResponse.json({

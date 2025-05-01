@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { FaUserCircle } from "react-icons/fa";
-import { createBrowserClient } from "@supabase/ssr"; // Updated import
-import { SupabaseClient } from "@supabase/supabase-js"; // Import SupabaseClient from @supabase/supabase-js
+import { createBrowserClient } from "@supabase/ssr";
+import { SupabaseClient } from "@supabase/supabase-js";
 
-// Reusable component
+// Reusable component for youth categories
 const YouthCategory = ({
   title,
   data,
@@ -44,44 +44,57 @@ export default function Dashboard() {
   const [error, setError] = useState("");
   const router = useRouter();
 
-  // Retrieve Supabase credentials from environment variables
+  // Initialize Supabase client
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   let supabase: SupabaseClient | null = null;
 
   if (supabaseUrl && supabaseAnonKey) {
-    supabase = createBrowserClient(supabaseUrl, supabaseAnonKey); // Pass SUPABASE_URL and SUPABASE_ANON_KEY
+    supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
   } else {
     console.error("Supabase credentials are missing. Please check your environment variables.");
   }
 
   useEffect(() => {
-    if (!supabase) {
-      return;
-    }
+    if (!supabase) return;
 
     const fetchUserAndData = async () => {
       try {
-        // Fetch user
+        // Fetch user session
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+
+        if (sessionError || !session) {
+          console.error("Session expired or invalid. Redirecting to login...");
+          router.push("/login");
+          return;
+        }
+
         const {
           data: { user },
+          error: userError,
         } = await supabase.auth.getUser();
 
-        if (!user) {
+        if (userError || !user) {
+          console.error("User not found. Redirecting to login...");
           router.push("/login");
-        } else {
-          setUser(user.email ? { email: user.email } : null);
+          return;
         }
+
+        setUser(user.email ? { email: user.email } : null);
 
         // Fetch youth data
         const { data, error: fetchError } = await supabase.from("youth_data").select("*");
 
         if (fetchError) throw fetchError;
 
+        // Organize data by category
         const categorized: Record<string, { label: string; count: number }[]> = {};
 
-        for (const row of data) {
+        for (const row of data || []) {
           const category = row.category;
           const subCategory = row.sub_category;
           const count = row.count;
@@ -95,7 +108,7 @@ export default function Dashboard() {
         if (err instanceof Error) {
           setError(err.message);
         } else {
-          setError("An unknown error occurred.");
+          setError("An unexpected error occurred while fetching data.");
         }
       } finally {
         setLoading(false);
@@ -105,6 +118,7 @@ export default function Dashboard() {
     fetchUserAndData();
   }, [supabase, router]);
 
+  // Logout handler
   const handleLogout = async () => {
     if (supabase) {
       await supabase.auth.signOut();
@@ -112,6 +126,7 @@ export default function Dashboard() {
     router.push("/login");
   };
 
+  // Calculate total counts for each category
   const totalCounts: Record<string, number> = {};
   for (const [category, entries] of Object.entries(youthData)) {
     totalCounts[category] = entries.reduce((sum, item) => sum + item.count, 0);

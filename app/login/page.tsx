@@ -1,4 +1,4 @@
-"use client";
+"use client"; // Mark this file as a client component
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -11,15 +11,23 @@ const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Loading state
+  const [showPassword, setShowPassword] = useState(false); // Password visibility toggle
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!email || !password) {
+      setError("Please fill in all fields.");
+      return;
+    }
+
     setIsLoading(true);
     setError("");
 
     try {
+      console.log("Sending credentials:", { email, password });
+
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -27,17 +35,20 @@ const LoginPage = () => {
       });
 
       const data = await response.json();
-      console.log("Server response:", data);
+      console.log("Server response:", data); // Debugging: Log server response
 
       if (!response.ok) {
         throw new Error(data.error || "Login failed.");
       }
 
-      if (data.user) {
+      if (data.user && data.token) {
+        // Store the JWT token in localStorage for future authentication
         localStorage.setItem("token", data.token);
+
+        // Redirect to the dashboard
         router.push("/dashboard");
       } else {
-        throw new Error("No user data returned.");
+        throw new Error("No user data or token returned.");
       }
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -71,6 +82,7 @@ const LoginPage = () => {
         <p className="text-gray-700">Monitor Jasaan Population</p>
 
         <form onSubmit={handleLogin} className="mt-6 w-full max-w-md">
+          {/* Email Input */}
           <input
             type="email"
             placeholder="Email"
@@ -80,6 +92,7 @@ const LoginPage = () => {
             className="w-full p-3 border rounded-full mb-4"
           />
 
+          {/* Password Input */}
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
@@ -110,6 +123,7 @@ const LoginPage = () => {
             {isLoading ? "Logging in..." : "Login"}
           </button>
 
+          {/* Signup Link */}
           <div className="mt-4 flex justify-center w-full">
             <Link href="/signup">
               <span className="text-black">
